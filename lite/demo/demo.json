@@ -1,0 +1,262 @@
+{
+ "models": [
+  "isnet-general-use",
+  "birefnet-general-lite"
+ ],
+ "images": [
+  {
+   "id": "sticker",
+   "name": "sticker-on-desk.png",
+   "rel": "scans/sticker-on-desk.png",
+   "folder": "scans",
+   "credit": "Drawn for this demo",
+   "size": [
+    1100,
+    900
+   ],
+   "seconds": {
+    "isnet-general-use": 1.11,
+    "birefnet-general-lite": 8.69
+   },
+   "auto": {
+    "isnet-general-use": {
+     "used": "item",
+     "why": "item on a plain surface",
+     "quad": null
+    },
+    "birefnet-general-lite": {
+     "used": "item",
+     "why": "item on a plain surface",
+     "quad": null
+    }
+   },
+   "card_quad": null,
+   "skew": -8.0
+  },
+  {
+   "id": "stamp",
+   "name": "stamped-note.png",
+   "rel": "scans/stamped-note.png",
+   "folder": "scans",
+   "credit": "Drawn for this demo",
+   "size": [
+    1000,
+    760
+   ],
+   "seconds": {
+    "isnet-general-use": 1.79,
+    "birefnet-general-lite": 16.76
+   },
+   "auto": {
+    "isnet-general-use": {
+     "used": "ink",
+     "why": "white paper around the item",
+     "quad": null
+    },
+    "birefnet-general-lite": {
+     "used": "ink",
+     "why": "white paper around the item",
+     "quad": null
+    }
+   },
+   "card_quad": null,
+   "skew": 4.0
+  },
+  {
+   "id": "ticket",
+   "name": "museum-ticket.png",
+   "rel": "scans/museum-ticket.png",
+   "folder": "scans",
+   "credit": "Drawn for this demo",
+   "size": [
+    1086,
+    590
+   ],
+   "seconds": {
+    "isnet-general-use": 2.44,
+    "birefnet-general-lite": 15.15
+   },
+   "auto": {
+    "isnet-general-use": {
+     "used": "card",
+     "why": "trimmed the scanner edge and straightened",
+     "quad": [
+      [
+       0.015130627628984903,
+       0.0
+      ],
+      [
+       1.0,
+       0.06590421492267003
+      ],
+      [
+       0.9846984691514175,
+       1.0
+      ],
+      [
+       0.0,
+       0.9323181905544642
+      ]
+     ]
+    },
+    "birefnet-general-lite": {
+     "used": "card",
+     "why": "trimmed the scanner edge and straightened",
+     "quad": [
+      [
+       0.015130627628984903,
+       0.0
+      ],
+      [
+       1.0,
+       0.06590421492267003
+      ],
+      [
+       0.9846984691514175,
+       1.0
+      ],
+      [
+       0.0,
+       0.9323181905544642
+      ]
+     ]
+    }
+   },
+   "card_quad": [
+    [
+     0.015130627628984903,
+     0.0
+    ],
+    [
+     1.0,
+     0.06590421492267003
+    ],
+    [
+     0.9846984691514175,
+     1.0
+    ],
+    [
+     0.0,
+     0.9323181905544642
+    ]
+   ],
+   "skew": -2.5
+  },
+  {
+   "id": "coffee",
+   "name": "coffee.png",
+   "rel": "photos/coffee.png",
+   "folder": "photos",
+   "credit": "Rachel Michetti, CC0 (scikit-image sample data)",
+   "size": [
+    600,
+    400
+   ],
+   "seconds": {
+    "isnet-general-use": 2.68,
+    "birefnet-general-lite": 12.43
+   },
+   "auto": {
+    "isnet-general-use": {
+     "used": "keep",
+     "why": "the item fills the whole scan",
+     "quad": null
+    },
+    "birefnet-general-lite": {
+     "used": "keep",
+     "why": "the item fills the whole scan",
+     "quad": null
+    }
+   },
+   "card_quad": null,
+   "skew": -3.25
+  },
+  {
+   "id": "cat",
+   "name": "chelsea.png",
+   "rel": "photos/chelsea.png",
+   "folder": "photos",
+   "credit": "Stefan van der Walt, CC0 (scikit-image sample data)",
+   "size": [
+    451,
+    300
+   ],
+   "seconds": {
+    "isnet-general-use": 2.42,
+    "birefnet-general-lite": 15.01
+   },
+   "auto": {
+    "isnet-general-use": {
+     "used": "keep",
+     "why": "the item fills the whole scan",
+     "quad": null
+    },
+    "birefnet-general-lite": {
+     "used": "keep",
+     "why": "the item fills the whole scan",
+     "quad": null
+    }
+   },
+   "card_quad": null,
+   "skew": -8.0
+  },
+  {
+   "id": "astronaut",
+   "name": "astronaut.png",
+   "rel": "photos/astronaut.png",
+   "folder": "photos",
+   "credit": "NASA, public domain (scikit-image sample data)",
+   "size": [
+    512,
+    512
+   ],
+   "seconds": {
+    "isnet-general-use": 2.54,
+    "birefnet-general-lite": 12.22
+   },
+   "auto": {
+    "isnet-general-use": {
+     "used": "keep",
+     "why": "the item fills the whole scan",
+     "quad": null
+    },
+    "birefnet-general-lite": {
+     "used": "keep",
+     "why": "the item fills the whole scan",
+     "quad": null
+    }
+   },
+   "card_quad": null,
+   "skew": -0.0
+  },
+  {
+   "id": "rocket",
+   "name": "rocket.jpg",
+   "rel": "photos/rocket.jpg",
+   "folder": "photos",
+   "credit": "SpaceX, public domain (scikit-image sample data)",
+   "size": [
+    640,
+    427
+   ],
+   "seconds": {
+    "isnet-general-use": 2.49,
+    "birefnet-general-lite": 10.85
+   },
+   "auto": {
+    "isnet-general-use": {
+     "used": "keep",
+     "why": "the item fills the whole scan",
+     "quad": null
+    },
+    "birefnet-general-lite": {
+     "used": "keep",
+     "why": "the item fills the whole scan",
+     "quad": null
+    }
+   },
+   "card_quad": null,
+   "skew": -1.75
+  }
+ ]
+}
