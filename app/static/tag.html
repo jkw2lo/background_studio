@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="studio-token" content="__TOKEN__">
+  <title>Sort &amp; tag · Background Studio</title>
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="tag-page stepped">
+  <header class="topbar">
+    <div class="brand">
+      <img src="/static/icon.svg" alt="" width="26" height="26">
+      <span>Background Studio</span>
+      <nav class="tabs" aria-label="Sections">
+        <a href="/">Remove backgrounds</a>
+        <a href="/tag" class="active" aria-current="page">Sort &amp; tag</a>
+        <a href="/compare">Compare &amp; merge</a>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <span class="privacy"><span class="dot"></span><span>Offline &middot; on this Mac only</span></span>
+      <button class="ghost small" id="quitBtn" type="button">Quit</button>
+    </div>
+  </header>
+
+  <nav class="stepper" id="stepper" aria-label="Steps">
+    <button type="button" class="step-tab" data-step="1"><span class="step">1</span><span class="st-text"><b>Images</b><small id="st1"></small></span></button>
+    <i class="step-line"></i>
+    <button type="button" class="step-tab" data-step="2"><span class="step">2</span><span class="st-text"><b>Categories</b><small id="st2"></small></span></button>
+    <i class="step-line"></i>
+    <button type="button" class="step-tab" data-step="3"><span class="step">3</span><span class="st-text"><b>Sort</b><small id="st3"></small></span></button>
+    <i class="step-line"></i>
+    <button type="button" class="step-tab" data-step="4"><span class="step">4</span><span class="st-text"><b>Use your tags</b><small id="st4"></small></span></button>
+  </nav>
+
+  <div class="offline-banner page-banner" id="lostBanner" hidden>
+    Background Studio has stopped. Start it again from <b>Background Studio.command</b>.
+  </div>
+
+  <main class="pages">
+    <!-- ① Images -->
+    <section class="page" data-page="1">
+      <div class="page-body narrow">
+        <h1 class="page-title">Which pictures do you want to sort?</h1>
+        <p class="page-lead">Choose a folder (subfolders are included). Your pictures stay where they are; the app only reads them.</p>
+        <div class="btn-row big-actions">
+          <button type="button" class="primary" id="addFolder" data-picker>Choose a folder&hellip;</button>
+          <button type="button" id="addFiles" data-picker>Choose files&hellip;</button>
+        </div>
+
+        <div class="recent-block" id="recentBlock" hidden>
+          <h3 class="block-title">Or use a recent folder</h3>
+          <div class="recent-list" id="recentList"></div>
+        </div>
+
+        <div class="list-block" id="listBlock" hidden>
+          <div class="block-head">
+            <h3 class="block-title">In this list</h3>
+            <div class="btn-row">
+              <button type="button" class="small ghost" id="rescanBtn" title="Look for pictures added to these folders since last time">Check for new images</button>
+              <button type="button" class="small ghost" id="clearList">Clear all</button>
+            </div>
+          </div>
+          <ul class="folder-list" id="rootList"></ul>
+          <p class="hint">Removing a folder from the list doesn't touch its files, and its tags are remembered if you add it again.</p>
+        </div>
+      </div>
+      <footer class="page-foot">
+        <span class="foot-info" id="foot1"></span>
+        <button type="button" class="primary" data-goto="2" id="next1">Next: Categories &rarr;</button>
+      </footer>
+    </section>
+
+    <!-- ② Categories -->
+    <section class="page" data-page="2" hidden>
+      <div class="page-body narrow">
+        <h1 class="page-title">What are you sorting them into?</h1>
+        <p class="page-lead">Each picture gets one of these (or more). Their keys follow this order along the keyboard: <b>1</b>–<b>0</b>, then <b>Q</b>–<b>P</b>, <b>A</b>–<b>L</b> and <b>Z</b>–<b>M</b> (up to 36).</p>
+
+        <div class="round-tabs" id="roundTabs" role="tablist" aria-label="Rounds"></div>
+        <div class="round-head" id="roundHead">
+          <label class="round-name"><span class="field-label">Round name</span>
+            <input type="text" id="roundName" maxlength="40" spellcheck="false" placeholder="e.g. Place, Content">
+          </label>
+          <div class="btn-row">
+            <button type="button" class="small ghost" id="roundEarlier" title="Sort this round earlier">&larr; Earlier</button>
+            <button type="button" class="small ghost" id="roundLater" title="Sort this round later">Later &rarr;</button>
+            <button type="button" class="small ghost danger-ghost" id="roundDelete">Delete round</button>
+          </div>
+        </div>
+        <p class="hint rating-note" id="ratingNote" hidden>A star rating: press <b>1</b>–<b>5</b> while sorting. Auto-suggest doesn't apply to ratings.</p>
+
+        <div class="sets-row" id="setsRow">
+          <span class="field-label">Saved sets</span>
+          <div class="btn-row wrap">
+            <select id="setSelect" aria-label="Saved category sets"><option value="">Choose a saved set…</option></select>
+            <button type="button" class="small" id="useSet" disabled>Use this set</button>
+            <button type="button" class="small ghost" id="deleteSet" disabled title="Delete this saved set (tags already given are kept)">Delete</button>
+            <button type="button" class="small" id="saveSet">Save these as a set&hellip;</button>
+          </div>
+        </div>
+
+        <ul class="cat-list big" id="catList"></ul>
+        <form id="catForm" class="path-form" autocomplete="off">
+          <input id="catInput" type="text" placeholder="Add a category (comma-separate several)" maxlength="400" spellcheck="false">
+          <button type="submit">Add</button>
+        </form>
+        <p class="hint" id="catHint">Click a name to rename it, a colour dot to recolour it, and the arrows to reorder.</p>
+
+        <div class="option-card" id="autoCard">
+          <label class="check auto-check"><input type="checkbox" id="autoToggle"><span><b>Auto-suggest</b> a category for each picture. Press <b>↩</b> to accept, or another category's key to pick that instead.</span></label>
+          <p class="hint" id="autoHint"></p>
+        </div>
+      </div>
+      <footer class="page-foot">
+        <button type="button" class="ghost" data-goto="1">&larr; Images</button>
+        <span class="foot-info" id="foot2"></span>
+        <button type="button" class="primary" data-goto="3" id="next2">Next: Sort &rarr;</button>
+      </footer>
+    </section>
+
+    <!-- ③ Sort -->
+    <section class="page sort-page" data-page="3" hidden>
+      <div class="page-body wide sorter-main">
+        <div class="sort-top" id="sortTop">
+          <div class="sort-progress">
+            <div class="progress-head">
+              <strong id="progText"></strong>
+              <span class="muted" id="progSub"></span>
+            </div>
+            <div class="bar"><div id="progFill"></div></div>
+          </div>
+          <div class="segmented round-seg" id="roundSeg" role="tablist" aria-label="Round" hidden></div>
+          <div class="auto-bulk" id="autoBulk" hidden>
+            <select id="autoThresh" aria-label="How sure it must be" title="How sure it must be">
+              <option value="0.95">≥ 95% sure</option>
+              <option value="0.9" selected>≥ 90% sure</option>
+              <option value="0.8">≥ 80% sure</option>
+              <option value="0.7">≥ 70% sure</option>
+            </select>
+            <button type="button" class="small" id="autoTagBtn" title="Tag every picture it's at least this sure about. They're marked “auto” for you to check.">Auto-tag&hellip;</button>
+          </div>
+          <div class="segmented view-seg" id="viewSeg" role="tablist">
+            <button type="button" data-view="sort" class="active">Sort</button>
+            <button type="button" data-view="review">Review</button>
+          </div>
+        </div>
+
+        <!-- one picture at a time -->
+        <section class="sorter" id="sorter" hidden>
+          <div class="sorter-left">
+            <div class="sort-stage" id="sortStage">
+              <div class="sort-scroll" id="sortScroll"><img id="sortImg" alt="" draggable="false" title="Click to zoom in"></div>
+              <div class="sort-loading" id="sortLoading" hidden><span class="spinner"></span></div>
+              <div class="sort-flash" id="sortFlash" hidden></div>
+              <div class="suggest-bar" id="suggestBar" hidden></div>
+              <button type="button" class="nav-arrow left" id="backBtn" title="Previous image (←)" aria-label="Previous image">&lsaquo;</button>
+              <button type="button" class="nav-arrow right" id="nextBtn" title="Skip / next (→ or Space)" aria-label="Skip">&rsaquo;</button>
+            </div>
+            <div class="sort-caption">
+              <button type="button" class="linkish name-link" id="sortName" title="Show in Finder"></button>
+              <span class="muted" id="sortWhere"></span>
+              <span class="current-tags" id="sortTags"></span>
+              <span class="dup-note" id="sortDup" hidden></span>
+              <div class="segmented tiny bd-seg" id="bdSeg" aria-label="Background behind the picture" title="Background behind transparent pictures (\ key)">
+                <button type="button" data-bd="checker" title="Checkerboard"><i class="sw sw-trans"></i></button>
+                <button type="button" data-bd="white" title="White"><i class="sw sw-white"></i></button>
+                <button type="button" data-bd="black" title="Black"><i class="sw sw-black"></i></button>
+              </div>
+            </div>
+          </div>
+          <aside class="sorter-right">
+            <div class="cat-buttons" id="catButtons"></div>
+            <div class="sort-tools">
+              <button type="button" class="small ghost" id="undoBtn" title="Undo (Backspace or ⌘Z)">↶ Undo</button>
+              <button type="button" class="small ghost" id="skipBtn" title="Skip for now (Space or →)">Skip &rarr;</button>
+            </div>
+            <label class="check small-check flash-check"><input type="checkbox" id="flashToggle"><span>Show the chosen category in the middle</span></label>
+            <p class="keys">Press a category's key to tag (hold it to keep going) &middot; <b>⇧</b>+key adds a second tag &middot; <b>Space</b> skip &middot; <b>←</b> back &middot; <b>⌫</b> undo &middot; <b>\</b> background &middot; click the picture to zoom &middot; <b>/</b> search</p>
+          </aside>
+        </section>
+
+        <!-- finished -->
+        <section class="card-panel done-card" id="doneCard" hidden>
+          <div class="summary-icon">✓</div>
+          <div class="summary-body">
+            <h3 id="doneTitle">All sorted</h3>
+            <p id="doneText"></p>
+            <div class="done-counts" id="doneCounts"></div>
+            <div class="round-status" id="roundStatus" hidden></div>
+            <button type="button" class="primary next-round" id="nextRound" hidden></button>
+            <div class="btn-row wrap">
+              <button type="button" class="warn" id="doSkipped" hidden></button>
+              <button type="button" id="resortAll" title="Step through every picture again. ↩ keeps its tag, a category's key changes it.">Go through all again</button>
+              <button type="button" id="doneReview">Review all</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- review grid -->
+        <section id="review" hidden>
+          <form class="search-form" id="searchForm" role="search" autocomplete="off">
+            <input type="search" id="searchInput" placeholder="Search your pictures: temple, something pink, QR code…" spellcheck="false" aria-label="Search pictures by description">
+            <span class="muted search-info" id="searchInfo"></span>
+          </form>
+          <div class="toolbar">
+            <div class="filters" id="reviewFilters"></div>
+            <div class="tools">
+              <button type="button" class="small accent" id="queueBtn" hidden></button>
+              <button type="button" class="small" id="confirmAllBtn" hidden>Mark all as checked</button>
+              <div class="segmented tiny bd-seg" id="bdSeg2" aria-label="Background behind the pictures">
+                <button type="button" data-bd="checker" title="Checkerboard"><i class="sw sw-trans"></i></button>
+                <button type="button" data-bd="white" title="White"><i class="sw sw-white"></i></button>
+                <button type="button" data-bd="black" title="Black"><i class="sw sw-black"></i></button>
+              </div>
+              <button type="button" class="small" id="sendBtn" hidden></button>
+              <button type="button" class="small ghost danger-ghost" id="forgetTags" title="Remove every tag from the pictures in this list">Untag all&hellip;</button>
+            </div>
+          </div>
+          <div class="grid tag-grid" id="reviewGrid"></div>
+          <p class="empty-note muted" id="reviewEmpty" hidden>Nothing here.</p>
+        </section>
+      </div>
+      <footer class="page-foot slim">
+        <button type="button" class="ghost" data-goto="2">&larr; Categories</button>
+        <span class="foot-info" id="foot3"></span>
+        <button type="button" data-goto="4" id="next3">Next: Use your tags &rarr;</button>
+      </footer>
+    </section>
+
+    <!-- ④ Use your tags -->
+    <section class="page" data-page="4" hidden>
+      <div class="page-body narrow">
+        <h1 class="page-title">Use your tags</h1>
+        <p class="page-lead" id="useLead"></p>
+        <div class="done-counts" id="useCounts"></div>
+
+        <div class="use-grid">
+          <div class="option-card">
+            <h3>Copy into category folders</h3>
+            <p class="hint">A folder per category, with the pictures <b>copied</b> in. Nothing is moved, and nothing already in the destination is replaced. Running it again only copies what's new.</p>
+            <span class="field-label">Sorted copies go to</span>
+            <div class="folder-row">
+              <div class="folder" id="destDir">Not set yet</div>
+              <button type="button" class="small" id="chooseDest" data-picker>Change&hellip;</button>
+            </div>
+            <div id="layoutRow" hidden>
+              <label class="field-label" for="folderLayout">Folders by</label>
+              <select id="folderLayout"></select>
+            </div>
+            <label class="check small-check"><input type="checkbox" id="inclUntagged"><span>Also copy untagged pictures into “Untagged”</span></label>
+            <button type="button" class="primary" id="copyBtn">Copy into category folders</button>
+          </div>
+
+          <div class="option-card">
+            <h3>Spreadsheet</h3>
+            <p class="hint">One row per picture, with a column for each category. Opens in Numbers or Excel.</p>
+            <button type="button" id="csvBtn">Download spreadsheet (CSV)</button>
+          </div>
+
+          <div class="option-card">
+            <h3>Finder tags</h3>
+            <p class="hint">Adds your category names as Finder tags on the original files, so you can find them in Finder's sidebar and in Spotlight. Only the tag labels change, never the pictures.</p>
+            <div class="btn-row wrap">
+              <button type="button" id="finderBtn">Add as Finder tags&hellip;</button>
+              <button type="button" class="ghost" id="finderRemove">Remove these Finder tags</button>
+            </div>
+          </div>
+
+        </div>
+        <section class="start-again" aria-labelledby="startAgainTitle">
+          <h2 id="startAgainTitle">Finished? Start again</h2>
+          <p class="hint">Nothing here touches your pictures or anything you've copied or exported.</p>
+          <div class="start-grid">
+            <button type="button" class="start-opt" id="newBatch">
+              <b>Start a new batch</b>
+              <small>Clear this list and choose other pictures. Their tags are remembered if you add them again.</small>
+            </button>
+            <button type="button" class="start-opt" id="resortFromStart">
+              <b>Sort these again from scratch</b>
+              <small>Remove every tag from these pictures and go back to the first round.</small>
+            </button>
+            <button type="button" class="start-opt" id="goThroughAgain">
+              <b>Go through them again</b>
+              <small>Step through every picture with its current tags: ↩ keeps, a key changes.</small>
+            </button>
+          </div>
+        </section>
+      </div>
+      <footer class="page-foot">
+        <button type="button" class="ghost" data-goto="3">&larr; Sort</button>
+        <span class="foot-info"></span>
+      </footer>
+    </section>
+  </main>
+
+  <input type="color" id="colourPicker" hidden>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="/static/tag.js"></script>
+</body>
+</html>

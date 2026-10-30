@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="studio-token" content="__TOKEN__">
+  <title>Background Studio</title>
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="stepped">
+  <header class="topbar">
+    <div class="brand">
+      <img src="/static/icon.svg" alt="" width="26" height="26">
+      <span>Background Studio</span>
+      <nav class="tabs" aria-label="Sections">
+        <a href="/" class="active" aria-current="page">Remove backgrounds</a>
+        <a href="/tag" id="tagTab">Sort &amp; tag</a>
+        <a href="/compare">Compare &amp; merge</a>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <button class="privacy" id="privacy" type="button" aria-describedby="privacyPop">
+        <span class="dot"></span><span id="privacyText">Offline &middot; on this Mac only</span>
+      </button>
+      <div class="popover" id="privacyPop" role="tooltip" hidden>
+        <strong>Your images never leave this computer.</strong>
+        <ul>
+          <li>The app server listens on <code>127.0.0.1</code> only.</li>
+          <li>All processing runs on this Mac with a local model.</li>
+          <li>No accounts, analytics or telemetry.</li>
+          <li id="guardLine">Network guard active.</li>
+        </ul>
+      </div>
+      <button class="ghost small" id="quitBtn" type="button">Quit</button>
+    </div>
+  </header>
+
+  <nav class="stepper" id="stepper" aria-label="Steps">
+    <button type="button" class="step-tab" data-step="1"><span class="step">1</span><span class="st-text"><b>Add images</b><small id="st1"></small></span></button>
+    <i class="step-line"></i>
+    <button type="button" class="step-tab" data-step="2"><span class="step">2</span><span class="st-text"><b>Settings</b><small id="st2"></small></span></button>
+    <i class="step-line"></i>
+    <button type="button" class="step-tab" data-step="3"><span class="step">3</span><span class="st-text"><b>Results</b><small id="st3"></small></span></button>
+  </nav>
+
+  <div class="offline-banner page-banner" id="lostBanner" hidden>
+    Background Studio has stopped. Start it again from <b>Background Studio.command</b>.
+  </div>
+
+  <main class="pages">
+    <!-- ① Add images -->
+    <section class="page" data-page="1">
+      <div class="page-body narrow">
+        <h1 class="page-title">Which pictures need their background removed?</h1>
+        <p class="page-lead">Your originals are only read, never changed. Results are saved as new files.</p>
+        <div class="dropzone big-drop" id="dropzone" tabindex="0" role="button" aria-label="Add images">
+          <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path d="M12 16V4m0 0-4.5 4.5M12 4l4.5 4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <strong>Drop pictures or folders here</strong>
+          <span id="formatsLine">JPG, PNG, HEIC, WebP, TIFF, BMP</span>
+        </div>
+        <div class="btn-row big-actions">
+          <button type="button" class="primary" id="addFolder" data-picker>Choose a folder&hellip;</button>
+          <button type="button" id="addFiles" data-picker>Choose files&hellip;</button>
+        </div>
+        <form id="pathForm" class="path-form" autocomplete="off" hidden>
+          <input id="pathInput" type="text" placeholder="&hellip;or paste a file or folder path" spellcheck="false">
+          <button type="submit" class="small">Add</button>
+        </form>
+        <input type="file" id="fileFallback" accept="image/*,.heic,.heif" multiple hidden>
+        <input type="file" id="folderFallback" webkitdirectory multiple hidden>
+        <div class="grid-slot" id="slot1"></div>
+      </div>
+      <footer class="page-foot">
+        <span class="foot-info" id="foot1"></span>
+        <button type="button" class="primary" data-goto="2" id="next1">Next: Settings &rarr;</button>
+      </footer>
+    </section>
+
+    <!-- ② Settings -->
+    <section class="page" data-page="2" hidden>
+      <div class="page-body narrow">
+        <h1 class="page-title">How should they come out?</h1>
+        <p class="page-lead">These apply to the whole batch. You can fine-tune any single picture afterwards by clicking it.</p>
+        <div class="settings-grid">
+          <div class="option-card">
+            <label class="field-label" for="mode">What are you cutting out?</label>
+            <select id="mode">
+              <option value="auto">Auto-detect (scanned items)</option>
+              <option value="item">Cut-out items: stickers, labels, tags</option>
+              <option value="ink">Ink on paper: stamps, drawings, receipts</option>
+              <option value="photo">Photos: people, products, objects</option>
+            </select>
+            <p class="hint" id="modeHint"></p>
+          </div>
+
+          <div class="option-card">
+            <label class="field-label" for="chooseOut">Save results to</label>
+            <div class="folder-row">
+              <div class="folder" id="outDir"></div>
+              <button type="button" class="small" id="chooseOut" data-picker>Change&hellip;</button>
+            </div>
+
+            <span class="field-label">Background</span>
+            <div class="segmented" id="bgSeg" role="radiogroup" aria-label="Background">
+              <button type="button" role="radio" data-bg="transparent"><i class="sw sw-trans"></i>None</button>
+              <button type="button" role="radio" data-bg="white"><i class="sw sw-white"></i>White</button>
+              <button type="button" role="radio" data-bg="black"><i class="sw sw-black"></i>Black</button>
+              <button type="button" role="radio" data-bg="custom"><i class="sw" id="customSw"></i>Custom</button>
+            </div>
+            <div class="custom-row" id="customRow" hidden>
+              <input type="color" id="customColor" aria-label="Custom background colour">
+              <input type="text" id="customHex" maxlength="7" spellcheck="false" aria-label="Hex colour">
+            </div>
+            <p class="hint" id="bgHint"></p>
+          </div>
+
+          <div class="option-card">
+            <label class="field-label" for="model">Model</label>
+            <select id="model"></select>
+            <p class="hint" id="modelHint"></p>
+          </div>
+
+          <div class="option-card">
+            <span class="field-label">Options</span>
+            <label class="check"><input type="checkbox" id="skip"><span>Skip images already processed</span></label>
+            <label class="check"><input type="checkbox" id="clean"><span>Clean up edge colour fringing <em>(slower)</em></span></label>
+            <label class="check"><input type="checkbox" id="trim"><span>Trim empty space around cut-outs</span></label>
+          </div>
+        </div>
+      </div>
+      <footer class="page-foot">
+        <button type="button" class="ghost" data-goto="1">&larr; Add images</button>
+        <span class="foot-info" id="startHint">Originals are never changed. Results are saved as new files.</span>
+        <button type="button" class="primary" id="startBtn" disabled>Remove backgrounds</button>
+      </footer>
+    </section>
+
+    <!-- ③ Results -->
+    <section class="page" data-page="3" hidden>
+      <div class="page-body wide-results">
+        <section class="card-panel progress-card" id="progressCard" hidden>
+          <div class="progress-head">
+            <strong id="progTitle">Processing&hellip;</strong>
+            <span class="muted" id="progEta"></span>
+            <button type="button" class="small danger-ghost" id="cancelBtn" hidden>Cancel</button>
+          </div>
+          <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="bar"><div id="barFill"></div></div>
+          <div class="stats">
+            <span class="stat"><b id="stDone">0</b> done</span>
+            <span class="stat"><b id="stSkip">0</b> skipped</span>
+            <span class="stat fail"><b id="stFail">0</b> failed</span>
+            <span class="stat"><b id="stLeft">0</b> left</span>
+          </div>
+          <div class="current muted" id="progCurrent"></div>
+        </section>
+
+        <section class="card-panel summary-card" id="summaryCard" hidden>
+          <div class="summary-icon" id="sumIcon"></div>
+          <div class="summary-body">
+            <h3 id="sumTitle">All done</h3>
+            <p id="sumText"></p>
+            <p class="fatal" id="sumFatal" hidden></p>
+            <div class="btn-row wrap">
+              <button type="button" id="sumOpen">Open output folder</button>
+              <button type="button" id="sumZip">Download all as ZIP</button>
+              <a class="btn-link" href="/tag" id="sumTag">Sort &amp; tag the results &rarr;</a>
+              <button type="button" class="warn" id="sumRetry" hidden>Retry failed</button>
+              <button type="button" class="ghost" id="sumDismiss">Dismiss</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="grid-slot" id="slot3">
+          <div class="toolbar" id="toolbar" hidden>
+            <div class="filters" id="filters" role="tablist">
+              <button type="button" data-filter="all" class="active">All <span></span></button>
+              <button type="button" data-filter="queued">Queued <span></span></button>
+              <button type="button" data-filter="done">Done <span></span></button>
+              <button type="button" data-filter="skipped">Skipped <span></span></button>
+              <button type="button" data-filter="failed">Failed <span></span></button>
+            </div>
+            <div class="tools">
+              <button type="button" class="small" id="zipBtn">Download ZIP</button>
+              <button type="button" class="small" id="openOut">Open folder</button>
+              <button type="button" class="small ghost" id="clearBtn">Clear list</button>
+            </div>
+          </div>
+          <div class="grid" id="grid" data-filter="all"></div>
+          <div class="empty" id="empty">
+            <div class="empty-art" aria-hidden="true"><div class="ea-photo"></div><div class="ea-cut"></div></div>
+            <h3>No images yet</h3>
+            <p>Drop photos or whole folders anywhere in this window, or use <b>Choose a folder</b> / <b>Choose files</b>.</p>
+          </div>
+        </div>
+      </div>
+      <footer class="page-foot">
+        <button type="button" class="ghost" data-goto="2">&larr; Settings</button>
+        <span class="foot-info" id="foot3"></span>
+        <button type="button" data-goto="1">Add more images</button>
+      </footer>
+    </section>
+  </main>
+
+  <div class="drag-overlay" id="dragOverlay" hidden><div>Drop to add images</div></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <dialog id="inspector" aria-labelledby="inName">
+    <div class="insp-head">
+      <div class="insp-title">
+        <strong id="inName"></strong>
+        <span class="muted" id="inMeta"></span>
+      </div>
+      <div class="insp-controls">
+        <div class="segmented tiny" id="backdropSeg" aria-label="Preview backdrop">
+          <button type="button" data-bd="checker" title="Checkerboard"><i class="sw sw-trans"></i></button>
+          <button type="button" data-bd="white" title="White"><i class="sw sw-white"></i></button>
+          <button type="button" data-bd="black" title="Black"><i class="sw sw-black"></i></button>
+          <button type="button" data-bd="custom" title="Your custom colour"><i class="sw" id="bdCustomSw"></i></button>
+        </div>
+        <div class="segmented tiny" id="zoomSeg" aria-label="Zoom">
+          <button type="button" data-zoom="1">Fit</button>
+          <button type="button" data-zoom="2">2&times;</button>
+          <button type="button" data-zoom="4">4&times;</button>
+          <span class="zoom-level" id="zoomLevel" title="Zoom (⌘+ / ⌘− / ⌘0)">Fit</span>
+        </div>
+        <button type="button" class="small grid-toggle" id="gridToggle" title="Show grid lines (G)" aria-pressed="false">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M1 5.5h14M1 10.5h14M5.5 1v14M10.5 1v14" stroke="currentColor" stroke-width="1.3" fill="none"/></svg> Grid
+        </button>
+        <button type="button" class="icon" id="inClose" aria-label="Close">&times;</button>
+      </div>
+    </div>
+
+    <div class="insp-body">
+      <div class="stage-area">
+      <div class="stage-wrap" id="stageWrap">
+        <div class="stage" id="stage">
+          <img id="inBefore" alt="Original" draggable="false">
+          <div class="after-layer bd-checker" id="afterLayer">
+            <img id="inAfter" alt="Result" draggable="false">
+            <canvas id="liveCanvas" hidden></canvas>
+          </div>
+          <svg class="crop-svg" id="cropSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" hidden>
+            <path id="cropShade" fill-rule="evenodd"></path>
+            <polygon id="cropPoly"></polygon>
+          </svg>
+          <div class="crop-handle" data-i="0" hidden></div>
+          <div class="crop-handle" data-i="1" hidden></div>
+          <div class="crop-handle" data-i="2" hidden></div>
+          <div class="crop-handle" data-i="3" hidden></div>
+          <svg class="grid-svg" id="gridSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" hidden></svg>
+          <div class="brush-cursor" id="brushCursor" hidden></div>
+          <div class="handle" id="handle"><span></span></div>
+          <span class="tag tag-l" id="tagBefore">Before</span><span class="tag tag-r" id="tagAfter">After</span>
+          <div class="stage-msg" id="stageMsg" hidden></div>
+        </div>
+      </div>
+        <div class="stage-busy" id="stageBusy" hidden><span class="spinner"></span><span id="busyText">Updating preview…</span></div>
+        <div class="zoom-hint" id="zoomHint" hidden>Pinch or ⌘-scroll to zoom · two-finger scroll or Space-drag to pan · double-click: Fit / 2.5×</div>
+      </div>
+
+      <aside class="edit-panel" id="editPanel">
+        <section>
+          <h4>Method</h4>
+          <div class="method-grid" id="methodSeg">
+            <button type="button" data-mode="auto" title="Decide from the scan's edges">Auto</button>
+            <button type="button" data-mode="item" title="Cut the whole sticker, label or tag out of its surface">Cut-out item</button>
+            <button type="button" data-mode="ink" title="Make the paper transparent, keep only the ink">Ink only</button>
+            <button type="button" data-mode="photo" title="Classic AI subject cut-out">Photo</button>
+            <button type="button" data-mode="card" title="Keep the whole card; trim scanner edges and straighten">Card</button>
+            <button type="button" data-mode="keep" title="Save the scan unchanged">Keep as is</button>
+          </div>
+          <p class="hint" id="methodNote"></p>
+        </section>
+
+        <section id="secInk">
+          <h4>Ink</h4>
+          <label class="slider-label" for="inkStrength">Ink strength <output id="inkVal"></output></label>
+          <input type="range" id="inkStrength" min="-100" max="100" step="5">
+          <div class="slider-ends"><span>lighter, removes more paper</span><span>bolder</span></div>
+          <div class="paper-row">
+            <span>Paper colour</span>
+            <i class="sw sw-big" id="paperSw"></i>
+            <button type="button" class="small" id="paperPick">Pick…</button>
+            <button type="button" class="small ghost" id="paperAuto">Auto</button>
+          </div>
+        </section>
+
+        <section id="secEdge">
+          <h4>Edges</h4>
+          <label class="slider-label" for="edgeGrow">Edge <output id="growVal"></output></label>
+          <input type="range" id="edgeGrow" min="-15" max="15" step="0.5">
+          <div class="slider-ends"><span>shrink</span><span>grow</span></div>
+          <label class="slider-label" for="edgeSoft">Softness <output id="softVal"></output></label>
+          <input type="range" id="edgeSoft" min="0" max="15" step="0.5">
+          <label class="check"><input type="checkbox" id="fillHoles"><span>Fill holes (keep everything inside the outline)</span></label>
+          <label class="check"><input type="checkbox" id="fringe"><span>Clean up edge colour fringing</span></label>
+        </section>
+
+        <section id="secRotate">
+          <h4>Rotate &amp; straighten</h4>
+          <div class="btn-row wrap">
+            <button type="button" class="small" id="rotLeft" title="Rotate 90° anticlockwise (Shift+R)">⟲ 90°</button>
+            <button type="button" class="small" id="rotRight" title="Rotate 90° clockwise (R)">⟳ 90°</button>
+            <button type="button" class="small" id="autoStraighten" title="Level the lines and edges automatically">Auto-straighten</button>
+          </div>
+          <label class="slider-label" for="straighten">Straighten <output id="angleVal"></output></label>
+          <input type="range" id="straighten" min="-20" max="20" step="0.1">
+          <div class="slider-ends"><span>anticlockwise</span><button type="button" class="linkish" id="angleZero">0°</button><span>clockwise</span></div>
+        </section>
+
+        <section id="secCrop">
+          <h4>Crop</h4>
+          <p class="hint" id="cropNote"></p>
+          <div class="btn-row wrap" id="cropButtons">
+            <button type="button" class="small" id="cropEdit">Adjust corners…</button>
+            <button type="button" class="small ghost" id="cropReset">No crop</button>
+          </div>
+          <label class="check" id="rectLockRow" hidden><input type="checkbox" id="rectLock"><span>Keep 90° corners (rectangle)</span></label>
+          <div class="btn-row wrap" id="cropTools" hidden>
+            <button type="button" class="small" id="cropAuto">Auto-detect</button>
+            <button type="button" class="small" id="cropFull">Whole image</button>
+            <button type="button" class="small" id="cropCancel">Cancel</button>
+            <button type="button" class="small accent" id="cropDone">Done</button>
+          </div>
+        </section>
+
+        <section id="secTone">
+          <h4>Tone</h4>
+          <label class="slider-label" for="toneBright">Brightness <output id="brightVal"></output></label>
+          <input type="range" id="toneBright" min="-100" max="100" step="2">
+          <label class="slider-label" for="toneContrast">Contrast <output id="contrastVal"></output></label>
+          <input type="range" id="toneContrast" min="-100" max="100" step="2">
+          <label class="slider-label" for="toneSat">Saturation <output id="satVal"></output></label>
+          <input type="range" id="toneSat" min="-100" max="100" step="2">
+          <label class="check"><input type="checkbox" id="autoTone"><span>Auto levels (fix dull or faded scans)</span></label>
+          <div class="btn-row"><button type="button" class="small ghost" id="toneReset">Reset tone</button></div>
+          <p class="hint">Applied to the finished result. "Before" always shows the untouched original.</p>
+        </section>
+
+        <section id="secBrush">
+          <h4>Touch up</h4>
+          <div class="segmented tiny" id="toolSeg">
+            <button type="button" data-tool="view" title="Compare before/after (V)">Compare</button>
+            <button type="button" data-tool="keep" title="Paint to bring back parts of the original (K)">Keep brush</button>
+            <button type="button" data-tool="erase" title="Paint to remove (E)">Erase brush</button>
+          </div>
+          <label class="slider-label" for="brushSize">Brush size <output id="brushVal"></output></label>
+          <input type="range" id="brushSize" min="4" max="200" step="2">
+          <div class="btn-row">
+            <button type="button" class="small" id="brushUndo">Undo</button>
+            <button type="button" class="small ghost" id="brushClear">Clear touch-ups</button>
+          </div>
+          <p class="hint">Shortcuts: K keep · E erase · V compare · [ ] brush size · ⌘Z undo · R / ⇧R rotate · G grid · ⌘S save · ⌘↩ save &amp; next · ⌘⇧C / ⌘⇧V copy / paste settings · pinch or ⌘-scroll zoom · Space-drag pan · ⌘0 fit</p>
+        </section>
+
+        <div class="panel-foot">
+          <div class="foot-row">
+            <button type="button" class="small ghost" id="copySettings" title="Copy this image's method, rotation, tone, ink and edge settings (⌘⇧C)">Copy settings</button>
+            <button type="button" class="small ghost" id="pasteSettings" title="Apply copied settings to this image (⌘⇧V)">Paste</button>
+            <button type="button" class="small ghost" id="resetAuto" title="Forget this image's manual changes">Reset</button>
+          </div>
+          <div class="foot-row">
+            <span class="dirty-note" id="dirtyNote"></span>
+            <button type="button" class="small" id="saveEdits" title="Save (⌘S)">Save</button>
+            <button type="button" class="small accent" id="saveNext" title="Save and open the next image (⌘↩)">Save &amp; next →</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="insp-foot">
+      <div class="paths">
+        <div><span class="muted">Original</span> <code id="inSrc"></code></div>
+        <div id="inOutRow"><span class="muted">Result</span> <code id="inOut"></code></div>
+        <div class="error-text" id="inErr" hidden></div>
+      </div>
+      <div class="btn-row wrap">
+        <button type="button" class="small" id="inPrev" aria-label="Previous image">&larr;</button>
+        <button type="button" class="small" id="inNext" aria-label="Next image">&rarr;</button>
+        <button type="button" class="small" id="inRevealSrc">Show original</button>
+        <button type="button" class="small" id="inRevealOut">Show result in Finder</button>
+        <button type="button" class="small" id="inFull">Open full size</button>
+        <button type="button" class="small warn" id="inRetry" hidden>Retry</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/editor.js"></script>
+</body>
+</html>

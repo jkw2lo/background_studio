@@ -1,0 +1,14 @@
+# Downloaded by setup.sh
+.venv/
+.tools/
+models/
+
+# Your settings, logs and caches
+data/
+
+# Built by make-launcher.sh (setup.sh runs it)
+Background Studio.app/
+
+__pycache__/
+*.pyc
+.DS_Store

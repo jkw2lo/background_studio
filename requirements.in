@@ -1,0 +1,5 @@
+# Top-level dependencies. Exact versions of everything are pinned in requirements.lock
+# (generated with: uv pip compile requirements.in --generate-hashes -o requirements.lock)
+rembg[cpu]==2.0.86      # MIT  - background-removal pipeline (runs ONNX models locally)
+flask==3.1.2            # BSD  - tiny web server for the UI, bound to 127.0.0.1 only
+pillow-heif==1.1.1      # BSD  - lets Pillow read iPhone HEIC/HEIF photos

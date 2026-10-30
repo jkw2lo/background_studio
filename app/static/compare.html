@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="studio-token" content="__TOKEN__">
+  <title>Compare &amp; merge · Background Studio</title>
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="compare-page stepped">
+  <header class="topbar">
+    <div class="brand">
+      <img src="/static/icon.svg" alt="" width="26" height="26">
+      <span>Background Studio</span>
+      <nav class="tabs" aria-label="Sections">
+        <a href="/">Remove backgrounds</a>
+        <a href="/tag">Sort &amp; tag</a>
+        <a href="/compare" class="active" aria-current="page">Compare &amp; merge</a>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <span class="privacy"><span class="dot"></span><span>Offline &middot; on this Mac only</span></span>
+      <button class="ghost small" id="quitBtn" type="button">Quit</button>
+    </div>
+  </header>
+
+  <nav class="stepper" id="stepper" aria-label="Steps">
+    <button type="button" class="step-tab" data-step="1"><span class="step">1</span><span class="st-text"><b>Folders</b><small id="st1"></small></span></button>
+    <i class="step-line"></i>
+    <button type="button" class="step-tab" data-step="2"><span class="step">2</span><span class="st-text"><b>Differences</b><small id="st2"></small></span></button>
+    <i class="step-line"></i>
+    <button type="button" class="step-tab" data-step="3"><span class="step">3</span><span class="st-text"><b>Consolidate</b><small id="st3"></small></span></button>
+  </nav>
+
+  <div class="offline-banner page-banner" id="lostBanner" hidden>
+    Background Studio has stopped. Start it again from <b>Background Studio.app</b>.
+  </div>
+
+  <main class="pages">
+    <!-- ① Folders -->
+    <section class="page" data-page="1">
+      <div class="page-body narrow">
+        <h1 class="page-title">Which folders do you want to compare?</h1>
+        <p class="page-lead">Two or more, such as a folder and its backup, or two folders of similar pictures. Subfolders are included. Nothing is changed until you choose to consolidate in step 3.</p>
+        <div class="btn-row big-actions">
+          <button type="button" class="primary" id="addFolders" data-picker>Add folders&hellip;</button>
+        </div>
+        <div class="list-block" id="folderBlock" hidden>
+          <div class="block-head">
+            <h3 class="block-title">Comparing</h3>
+            <button type="button" class="small ghost" id="clearFolders">Clear all</button>
+          </div>
+          <ul class="folder-list" id="folderList"></ul>
+          <p class="hint">The first folder (<b>A</b>) is the main one: when there are copies, its file names and folder layout are the ones kept. Use the arrows to change the order.</p>
+        </div>
+      </div>
+      <footer class="page-foot">
+        <span class="foot-info" id="foot1"></span>
+        <button type="button" class="primary" id="compareBtn">Compare &rarr;</button>
+      </footer>
+    </section>
+
+    <!-- ② Differences -->
+    <section class="page" data-page="2" hidden>
+      <div class="page-body wide-results">
+        <section class="card-panel progress-card" id="jobCard" hidden>
+          <div class="progress-head">
+            <strong id="jobTitle">Comparing&hellip;</strong>
+            <span class="muted" id="jobCount"></span>
+            <button type="button" class="small danger-ghost" id="cancelBtn">Cancel</button>
+          </div>
+          <div class="bar"><div id="jobFill"></div></div>
+          <p class="hint" id="jobHint">Pictures you've compared or sorted before are remembered, so the next time is quicker.</p>
+        </section>
+
+        <div id="results" hidden>
+          <div class="venn-wrap" id="venn"></div>
+          <button type="button" class="linkish clash-link" id="clashLink" hidden></button>
+          <div class="region-bar" id="regionBar"></div>
+          <p class="hint saving" id="saving"></p>
+          <div class="toolbar">
+            <div class="muted" id="filterInfo"></div>
+            <div class="tools">
+              <div class="segmented tiny bd-seg" id="bdSeg" aria-label="Background behind the pictures">
+                <button type="button" data-bd="checker" title="Checkerboard"><i class="sw sw-trans"></i></button>
+                <button type="button" data-bd="white" title="White"><i class="sw sw-white"></i></button>
+                <button type="button" data-bd="black" title="Black"><i class="sw sw-black"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="cmp-list" id="cmpList"></div>
+          <button type="button" class="small" id="moreBtn" hidden>Show more</button>
+          <p class="empty-note muted" id="listEmpty" hidden>Nothing here.</p>
+        </div>
+      </div>
+      <footer class="page-foot">
+        <button type="button" class="ghost" data-goto="1">&larr; Folders</button>
+        <span class="foot-info" id="foot2"></span>
+        <button type="button" class="primary" data-goto="3" id="next2">Next: Consolidate &rarr;</button>
+      </footer>
+    </section>
+
+    <!-- ③ Consolidate -->
+    <section class="page" data-page="3" hidden>
+      <div class="page-body narrow">
+        <h1 class="page-title">Consolidate</h1>
+        <p class="page-lead" id="planLead"></p>
+        <div class="plan-points" id="planPoints"></div>
+
+        <div class="use-grid">
+          <div class="option-card">
+            <h3>Create a new merged folder</h3>
+            <p class="hint">Copies one of everything into a new folder. <b>The folders you compared aren't changed at all.</b> Safest, and needs space for one more copy.</p>
+            <button type="button" class="primary" id="mergeNew" data-picker>Choose where, and create it&hellip;</button>
+          </div>
+          <div class="option-card">
+            <h3 id="intoTitle">Merge into folder A</h3>
+            <p class="hint" id="intoHint">Copies whatever folder A is missing into it (versions and clashing names get “(2)”-style suffixes; nothing in A is replaced). Then you can move the leftover copies to the Trash.</p>
+            <button type="button" id="mergeInto">Merge into A</button>
+          </div>
+        </div>
+
+        <section class="card-panel done-card" id="doneCard" hidden>
+          <div class="summary-icon">✓</div>
+          <div class="summary-body">
+            <h3 id="doneTitle"></h3>
+            <p id="doneText"></p>
+            <p class="fatal" id="doneProblems" hidden></p>
+            <div class="btn-row wrap">
+              <button type="button" id="openDest">Open the folder</button>
+              <button type="button" class="warn" id="trashBtn" hidden></button>
+            </div>
+            <p class="hint" id="trashHint" hidden>The Trash keeps them until you empty it, so you can still put any back.</p>
+          </div>
+        </section>
+      </div>
+      <footer class="page-foot">
+        <button type="button" class="ghost" data-goto="2">&larr; Differences</button>
+        <span class="foot-info"></span>
+      </footer>
+    </section>
+  </main>
+
+  <dialog id="cmpDialog" class="cmp-dialog" aria-labelledby="dlgTitle">
+    <div class="insp-head">
+      <div class="insp-title"><strong id="dlgTitle"></strong><span class="muted" id="dlgSub"></span></div>
+      <div class="insp-controls">
+        <div class="segmented tiny bd-seg" aria-label="Background behind the pictures">
+          <button type="button" data-bd="checker" title="Checkerboard"><i class="sw sw-trans"></i></button>
+          <button type="button" data-bd="white" title="White"><i class="sw sw-white"></i></button>
+          <button type="button" data-bd="black" title="Black"><i class="sw sw-black"></i></button>
+        </div>
+        <button type="button" class="icon" id="dlgClose" aria-label="Close">&times;</button>
+      </div>
+    </div>
+    <div class="dlg-body" id="dlgBody"></div>
+  </dialog>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="/static/compare.js"></script>
+</body>
+</html>
