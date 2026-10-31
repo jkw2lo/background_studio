@@ -1,0 +1,69 @@
+/* Lite demo additions on top of the app's own style.css (same colour tokens, light and dark). */
+
+.lite-banner {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 10px 20px; font-size: 13px; line-height: 1.45;
+  background: var(--warn-soft); color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.lite-banner span { flex: 1 1 420px; }
+.lite-banner a { font-weight: 600; color: var(--warn); white-space: nowrap; text-decoration: none; }
+.lite-banner a:hover { text-decoration: underline; }
+
+.lite-pill {
+  display: inline-block; padding: 1px 7px; border-radius: 999px;
+  background: var(--warn); color: var(--surface);
+  font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; vertical-align: 1px;
+}
+.lite-pill-brand { font-size: 11px; padding: 2px 9px; }
+
+.lite-note {
+  margin: 10px 0 0; padding: 8px 10px; border-radius: var(--radius-sm);
+  background: var(--warn-soft); font-size: 12.5px; line-height: 1.45; color: var(--text);
+}
+.big-actions + .lite-note { max-width: 520px; margin: 14px auto 0; text-align: center; }
+#editPanel .lite-note { margin: 0 0 10px; }
+
+a.lite-get { white-space: nowrap; }
+
+.lite-chooser {
+  width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px;
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow-lg);
+}
+.lite-chooser h2 { margin: 0 0 4px; font-size: 19px; }
+.lite-muted { color: var(--muted); margin: 0 0 14px; font-size: 13.5px; }
+.lite-muted.small { font-size: 12px; margin: 12px 0 0; }
+.lite-groups { display: grid; gap: 12px; }
+.lite-group {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start;
+  padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+}
+.lite-group:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.lite-group input { grid-row: 1 / span 3; margin-top: 3px; }
+.lite-group .lite-muted { margin: 0; }
+.lite-thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.lite-thumbs img { height: 56px; width: auto; border-radius: 6px; border: 1px solid var(--border); }
+.lite-actions { justify-content: flex-end; margin-top: 18px; align-items: center; }
+
+/* The Mac app is laid out for a desktop window; the demo is also opened on phones. */
+@media (max-width: 760px) {
+  .topbar { height: auto; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
+  .brand { min-width: 0; flex-wrap: wrap; gap: 8px; }
+  .tabs { margin-left: 0; max-width: 100%; overflow-x: auto; }
+  .tabs a { white-space: nowrap; }
+  .topbar-right { margin-left: auto; }
+  .privacy, .topbar-right .lite-get, .lite-more { display: none; }
+  .lite-banner { padding: 8px 16px; gap: 4px 12px; }
+  .stepper { overflow-x: auto; padding-left: 16px; padding-right: 16px; }
+  .step-tab { flex: none; }
+  .st-text small { display: none; }
+  .step-line { min-width: 8px; }
+  .lite-thumbs img { height: 44px; }
+}
+@media (max-width: 640px) {
+  /* style.css hides the app name here; keep it (and the Lite pill) on its own line instead. */
+  .brand > span { display: inline; }
+  .brand > .lite-pill-brand { display: inline-block; }
+  .tabs { flex-basis: 100%; order: 3; }
+}
