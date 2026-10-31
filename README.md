@@ -12,6 +12,12 @@ or any colour) to a separate folder. Your originals are never modified.
 * Re-running a batch skips images that were already done.
 * Download everything as one ZIP.
 
+**Try it in your browser first:** the [lite demo](https://jkw2lo.github.io/background_studio/) runs the
+same interface on 7 sample pictures. Their AI outlines were made in advance by the real models, and
+everything after that (methods, edges, ink, crop, tone and touch-ups) runs live in the page. It never
+reads your own files. How it's built: [lite/](lite/) (`python3 lite/build.py` makes the site;
+`lite/tools/make_demo.py` remakes the sample outlines).
+
 ---
 
 ## Start here (Mac)
