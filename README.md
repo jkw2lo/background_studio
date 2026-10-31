@@ -132,7 +132,13 @@ written until you click **Save**, which re-renders that image at full size.
 * **Tone**: *Brightness*, *Contrast* and *Saturation*, plus *Auto levels* for dull or faded scans.
   Tone is applied to the finished result; the "Before" side always shows the untouched original.
 * **Touch up**: *Keep brush* paints parts of the original back in; *Erase brush* removes anything
-  left over. The faint image underneath shows what was removed.
+  left over. The faint image underneath shows what was removed. *Colour fill* (**F**) saves the
+  painting: click a colour, such as a coloured letter the ink missed, and every part of the
+  picture in that colour is kept (or, with *Remove* or ⌥-click, taken out). *Touching only*
+  limits it to the patch you clicked; *Keep as Black / Grey* turns it into ink to match the rest;
+  *Colour range* sets how similar a shade still counts. Changing an option updates your last
+  click, and each fill is listed with an × to take it back. Fills are redone at full size when
+  you save, so small lettering stays sharp.
 * **Grid** (top bar, or **G**): straight-line guides over the image at any time.
 * **Zoom & pan**: pinch on the trackpad (or ⌘/Ctrl + scroll wheel) to zoom towards the pointer, up
   to 8×; scroll with two fingers, hold **Space** and drag, or drag with the middle mouse button to
@@ -140,12 +146,14 @@ written until you click **Save**, which re-renders that image at full size.
   out and back to Fit. Panning with Space works with any tool, so you can move around mid-touch-up
   without painting.
 * **Copy settings / Paste**: copy one image's method, rotation, tone, ink and edge settings and
-  paste them onto the next similar image (crops aren't copied; they belong to one image).
+  paste them onto the next similar image (crops and *Touching only* colour fills aren't copied;
+  they belong to one image, but *Everywhere* fills are, so one set of extra ink colours can be
+  used across a stack of the same label).
 * **Save & next →** (**⌘↩**) saves and opens the next image, so you can review a whole folder
   without closing the editor. Saving while a batch is running is fine: the image joins the queue.
 * **Reset** forgets the image's manual changes and processes it automatically again.
 
-Keyboard: **← →** previous/next · **Space**-drag pan · **⌘+ / ⌘− / ⌘0** zoom · **⌘S** save · **⌘↩** save & next · **R / ⇧R** rotate · **G** grid · **K / E / V** keep brush / erase brush / compare · **[ ]** brush size · **⌘Z** undo · **⌘⇧C / ⌘⇧V** copy / paste settings · **Esc** close.
+Keyboard: **← →** previous/next · **Space**-drag pan · **⌘+ / ⌘− / ⌘0** zoom · **⌘S** save · **⌘↩** save & next · **R / ⇧R** rotate · **G** grid · **K / E / F / V** keep brush / erase brush / colour fill / compare · **[ ]** brush size · **⌘Z** undo · **⌘⇧C / ⌘⇧V** copy / paste settings · **Esc** close.
 
 Manual changes are saved with the results (in a hidden `.background-studio` folder inside the
 output folder), so they survive restarts and reruns: the image is skipped, or redone with your

@@ -344,14 +344,43 @@
             <button type="button" data-tool="view" title="Compare before/after (V)">Compare</button>
             <button type="button" data-tool="keep" title="Paint to bring back parts of the original (K)">Keep brush</button>
             <button type="button" data-tool="erase" title="Paint to remove (E)">Erase brush</button>
+            <button type="button" data-tool="pick" title="Click a colour to keep (or remove) everything in that colour (F)">Colour fill</button>
           </div>
-          <label class="slider-label" for="brushSize">Brush size <output id="brushVal"></output></label>
-          <input type="range" id="brushSize" min="4" max="200" step="2">
+          <div id="brushOpts">
+            <label class="slider-label" for="brushSize">Brush size <output id="brushVal"></output></label>
+            <input type="range" id="brushSize" min="4" max="200" step="2">
+          </div>
+          <div id="pickOpts" hidden>
+            <p class="hint">Click a colour in the picture, such as a letter the ink missed. ⌥-click does the opposite.</p>
+            <div class="pick-row"><span>Click to</span>
+              <div class="segmented tiny" id="pickAct">
+                <button type="button" data-v="keep">Keep</button>
+                <button type="button" data-v="erase">Remove</button>
+              </div>
+            </div>
+            <div class="pick-row"><span>Where</span>
+              <div class="segmented tiny" id="pickWhere">
+                <button type="button" data-v="all" title="Every part of the picture in this colour">Everywhere</button>
+                <button type="button" data-v="near" title="Only the patch you clicked on">Touching only</button>
+              </div>
+            </div>
+            <div class="pick-row" id="pickToneRow"><span>Keep as</span>
+              <div class="segmented tiny" id="pickTone">
+                <button type="button" data-v="orig" title="Its own colour">Its colour</button>
+                <button type="button" data-v="black">Black</button>
+                <button type="button" data-v="grey">Grey</button>
+              </div>
+            </div>
+            <label class="slider-label" for="pickTol">Colour range <output id="pickTolVal"></output></label>
+            <input type="range" id="pickTol" min="4" max="60" step="1">
+            <div class="slider-ends"><span>exact colour</span><span>similar shades too</span></div>
+            <div class="pick-list" id="pickList"></div>
+          </div>
           <div class="btn-row">
             <button type="button" class="small" id="brushUndo">Undo</button>
             <button type="button" class="small ghost" id="brushClear">Clear touch-ups</button>
           </div>
-          <p class="hint">Shortcuts: K keep · E erase · V compare · [ ] brush size · ⌘Z undo · R / ⇧R rotate · G grid · ⌘S save · ⌘↩ save &amp; next · ⌘⇧C / ⌘⇧V copy / paste settings · pinch or ⌘-scroll zoom · Space-drag pan · ⌘0 fit</p>
+          <p class="hint">Shortcuts: K keep · E erase · F colour fill · V compare · [ ] brush size · ⌘Z undo · R / ⇧R rotate · G grid · ⌘S save · ⌘↩ save &amp; next · ⌘⇧C / ⌘⇧V copy / paste settings · pinch or ⌘-scroll zoom · Space-drag pan · ⌘0 fit</p>
         </section>
 
         <div class="panel-foot">

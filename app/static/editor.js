@@ -6,6 +6,8 @@
 //  * The server renders a fast preview (cut-out + matching original "frame") for the current
 //    method and adjustments. Brush strokes are painted on two canvases (keep / erase) and
 //    composited on top in the browser, so brushing is instant.
+//  * Colour fills ("picks": click a colour to keep or remove it) are adjustments, so the server
+//    redoes them at full size from the picked colour, and global ones copy to other images.
 //  * Save sends method + adjustments + the brush layers; the server re-renders at full size.
 
 const ED = {
@@ -17,6 +19,8 @@ const ED = {
   tool: "view", brush: 40,
   keep: null, erase: null, baseKeep: null, baseErase: null,
   strokes: [], stroke: null, editsAction: "keep", editsLoadedFor: null,
+  undo: [],              // this session's strokes and colour fills, newest last: { stroke } or { pick }
+  pick: { act: "keep", near: false, tone: "orig", tol: 20, ...readJson("bgs-pick") },
   crop: null,            // while adjusting corners: { quad, geoSrc, ar }
   picking: false,
   grid: lsGet("bgs-grid") === "1", gridFlash: false, gridTimer: null,
@@ -26,6 +30,7 @@ const ED = {
 // Per-viewer conveniences only; the page works without storage.
 function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch { /* ignore */ } }
+function readJson(k) { try { return JSON.parse(lsGet(k) || "null"); } catch { return null; } }
 
 const IDENTITY_QUAD = [[0, 0], [1, 0], [1, 1], [0, 1]];
 const MODE_NAME = { auto: "Auto", item: "Cut-out item", ink: "Ink only", photo: "Photo", card: "Card", keep: "Keep as is" };
@@ -41,9 +46,7 @@ function showSvg(svg, show) {
 
 function signed(n) { return `${n > 0 ? "+" : ""}${n}`; }
 
-function readClipboard() {
-  try { return JSON.parse(lsGet("bgs-clipboard") || "null"); } catch { return null; }
-}
+function readClipboard() { return readJson("bgs-clipboard"); }
 
 function describeSettings(c) {
   const a = c.adjust || {}, bits = [MODE_NAME[c.mode] || c.mode];
@@ -57,6 +60,7 @@ function describeSettings(c) {
   if (a.contrast) bits.push(`contrast ${signed(Math.round(a.contrast * 100))}`);
   if (a.sat) bits.push(`saturation ${signed(Math.round(a.sat * 100))}`);
   if (a.autotone) bits.push("auto levels");
+  if (a.picks) bits.push(`${a.picks.length} colour fill${a.picks.length > 1 ? "s" : ""}`);
   return bits.join(", ");
 }
 
@@ -101,12 +105,14 @@ function flashGrid() {
 }
 
 // ---------- rotation ----------
-// Crop corners and brush strokes are in the rotated frame, so they no longer fit after a rotation.
+// Crop corners, brush strokes and "touching only" fills are in the rotated frame, so they no
+// longer fit after a rotation.
 function geometryChanged() {
   if (ED.adjust.crop && !isIdentity(ED.adjust.crop)) {
     delete ED.adjust.crop;
     toast("The crop was reset because the rotation changed.");
   }
+  dropPlacedPicks("rotation");
   const it = currentItem();
   if (ED.strokes.length || ED.baseKeep || (it && it.has_edits && ED.editsAction === "keep")) {
     ED.strokes = [];
@@ -115,6 +121,20 @@ function geometryChanged() {
     redrawLayers();
     toast("Touch-ups were cleared because the rotation changed.");
   }
+}
+
+// Picks with a clicked point ("touching only") belong to where they were clicked.
+function withoutPlacedPicks(picks) {
+  const left = (picks || []).filter((p) => !p.at);
+  return left.length ? left : undefined;
+}
+
+function dropPlacedPicks(why) {
+  const picks = ED.adjust.picks || [];
+  if (!picks.some((p) => p.at)) return;
+  ED.adjust.picks = withoutPlacedPicks(picks);
+  if (!ED.adjust.picks) delete ED.adjust.picks;
+  toast(`"Touching only" colour fills were cleared because the ${why} changed.`);
 }
 
 function setGeometry(rot90, angle, delay = 220) {
@@ -154,6 +174,7 @@ function openInspector(id) {
   ED.live = null;
   ED.seq++;
   ED.strokes = [];
+  ED.undo = [];
   ED.editsAction = "keep";
   ED.editsLoadedFor = null;
   ED.baseKeep = ED.baseErase = null;
@@ -197,6 +218,7 @@ function inspectorStateChanged() {
     ED.mode = it.mode_override || S.settings.mode;
     ED.adjust = JSON.parse(JSON.stringify(it.adjust || {}));
     ED.strokes = [];
+    ED.undo = [];
     ED.editsAction = "keep";
     ED.editsLoadedFor = null;
     requestPreview();
@@ -330,14 +352,17 @@ function fillInspector() {
   $$("#toolSeg button").forEach((b) => b.classList.toggle("active", b.dataset.tool === ED.tool));
   $("#brushSize").value = ED.brush;
   $("#brushVal").textContent = `${ED.brush}px`;
-  $("#brushUndo").disabled = !ED.strokes.length;
-  $("#brushClear").disabled = !ED.strokes.length && !ED.baseKeep && !(it.has_edits && ED.editsAction === "keep");
+  $("#brushOpts").hidden = ED.tool === "pick";
+  $("#pickOpts").hidden = ED.tool !== "pick";
+  fillPickOpts();
+  $("#brushUndo").disabled = !ED.strokes.length && !ED.undo.some((u) => u.pick);
+  $("#brushClear").disabled = !ED.strokes.length && !ED.baseKeep && !(it.has_edits && ED.editsAction === "keep") && !a.picks;
 
-  const editButtons = "#editPanel #toolSeg button, #editPanel #cropButtons button, #paperPick, #paperAuto, #rotLeft, #rotRight, #autoStraighten, #angleZero, #toneReset, #copySettings, #pasteSettings";
+  const editButtons = "#editPanel #toolSeg button, #editPanel #cropButtons button, #pickOpts button, #paperPick, #paperAuto, #rotLeft, #rotRight, #autoStraighten, #angleZero, #toneReset, #copySettings, #pasteSettings";
   $$(`#editPanel input, ${editButtons}`).forEach((x) => { if (panelOff) x.disabled = true; });
   if (!panelOff) {
     $$("#editPanel input").forEach((x) => (x.disabled = false));
-    $$("#toolSeg button, #cropEdit, #paperPick, #rotLeft, #rotRight, #autoStraighten, #angleZero, #copySettings").forEach((x) => (x.disabled = false));
+    $$("#toolSeg button, #pickOpts button, #cropEdit, #paperPick, #rotLeft, #rotRight, #autoStraighten, #angleZero, #copySettings").forEach((x) => (x.disabled = false));
   }
   $("#saveEdits").disabled = panelOff || !ED.dirty;
   $("#saveNext").disabled = panelOff || (!ED.dirty && $("#inNext").disabled);
@@ -346,6 +371,93 @@ function fillInspector() {
   $("#dirtyNote").textContent = ED.dirty ? "Unsaved changes" : "";
   $("#stageBusy").hidden = !ED.busy;
   drawGrid();
+}
+
+// ---------- colour fill ----------
+const PICK_TONE = { black: "black", grey: "grey" };
+
+function fillPickOpts() {
+  const o = ED.pick;
+  $$("#pickAct button").forEach((b) => b.classList.toggle("active", b.dataset.v === o.act));
+  $$("#pickWhere button").forEach((b) => b.classList.toggle("active", b.dataset.v === (o.near ? "near" : "all")));
+  $$("#pickTone button").forEach((b) => b.classList.toggle("active", b.dataset.v === o.tone));
+  $("#pickToneRow").hidden = o.act !== "keep";
+  $("#pickTol").value = o.tol;
+  $("#pickTolVal").textContent = o.tol;
+  const list = $("#pickList");
+  list.replaceChildren(...(ED.adjust.picks || []).map((p, i) => {
+    const chip = document.createElement("span");
+    chip.className = "pick-chip";
+    const sw = document.createElement("i");
+    sw.className = "sw";
+    sw.style.background = p.c;
+    const what = p.act === "erase" ? "Remove" : p.tone ? `Keep as ${p.tone}` : "Keep";
+    const x = document.createElement("button");
+    x.type = "button";
+    x.textContent = "×";
+    x.title = "Undo this colour fill";
+    x.addEventListener("click", () => removePick(p));
+    chip.title = `${what} ${p.c}, range ${p.tol}${p.at ? ", only where clicked" : ", everywhere"}`;
+    chip.append(sw, `${what}${p.at ? " · here" : ""}`, x);
+    chip.dataset.i = i;
+    return chip;
+  }));
+}
+
+// The newest fill made in this session: changing the options updates it.
+function lastPick() {
+  const u = ED.undo[ED.undo.length - 1];
+  return u && u.pick && (ED.adjust.picks || []).includes(u.pick) ? u.pick : null;
+}
+
+function pickFromOptions(c, at, act) {
+  const o = ED.pick, p = { c, tol: o.tol, act };
+  if (o.near) p.at = at;
+  if (act === "keep" && PICK_TONE[o.tone]) p.tone = o.tone;
+  p._at = at;  // remembered so "Where" can still be switched; never saved (the server drops it)
+  return p;
+}
+
+function setPickOption(key, value) {
+  ED.pick[key] = value;
+  lsSet("bgs-pick", JSON.stringify({ act: ED.pick.act, near: ED.pick.near, tone: ED.pick.tone, tol: ED.pick.tol }));
+  const last = lastPick();
+  if (last) {
+    const next = pickFromOptions(last.c, last._at, key === "act" ? value : last.act);
+    ED.adjust.picks[ED.adjust.picks.indexOf(last)] = next;
+    ED.undo[ED.undo.length - 1] = { pick: next };
+    markDirty();
+    schedulePreview(key === "tol" ? 260 : 0);
+  } else fillInspector();
+}
+
+function addPick(e) {
+  const { x, y } = stagePoint(e);
+  if (x < 0 || y < 0 || x > 1 || y > 1) return;
+  const { w, h, frame } = ED.live;
+  const c = scratchCanvas(w, h).getContext("2d");
+  c.globalCompositeOperation = "source-over";
+  c.clearRect(0, 0, w, h);
+  c.drawImage(frame, 0, 0, w, h);
+  // Average a 3×3 patch, so scanner noise doesn't decide the colour.
+  const px = Math.min(w - 2, Math.max(1, Math.floor(x * w))), py = Math.min(h - 2, Math.max(1, Math.floor(y * h)));
+  const d = c.getImageData(px - 1, py - 1, 3, 3).data;
+  const avg = [0, 1, 2].map((k) => Math.round([0, 1, 2, 3, 4, 5, 6, 7, 8].reduce((t, i) => t + d[i * 4 + k], 0) / 9));
+  const hex = "#" + avg.map((v) => v.toString(16).padStart(2, "0")).join("");
+  const at = [+x.toFixed(5), +y.toFixed(5)];
+  const act = e.altKey ? { keep: "erase", erase: "keep" }[ED.pick.act] : ED.pick.act;  // ⌥-click: the opposite
+  const p = pickFromOptions(hex, at, act);
+  ED.adjust.picks = [...(ED.adjust.picks || []), p];
+  ED.undo.push({ pick: p });
+  markDirty();
+  requestPreview();
+}
+
+function removePick(p) {
+  const picks = (ED.adjust.picks || []).filter((q) => q !== p);
+  if (picks.length) ED.adjust.picks = picks; else delete ED.adjust.picks;
+  markDirty();
+  requestPreview();
 }
 
 // ---------- stage geometry ----------
@@ -610,6 +722,7 @@ function setTool(tool) {
   ED.tool = tool;
   const stage = $("#stage");
   stage.classList.toggle("brushing", tool !== "view");
+  stage.classList.toggle("pick-tool", tool === "pick");
   $("#brushCursor").hidden = true;
   $("#brushCursor").className = `brush-cursor ${tool}`;
   $$("#toolSeg button").forEach((b) => b.classList.toggle("active", b.dataset.tool === tool));
@@ -617,7 +730,7 @@ function setTool(tool) {
 
 function updateCursor(e) {
   const cur = $("#brushCursor");
-  if (ED.tool === "view" || !ED.live) { cur.hidden = true; return; }
+  if (ED.tool === "view" || ED.tool === "pick" || !ED.live) { cur.hidden = true; return; }
   const { x, y, r } = stagePoint(e);
   cur.hidden = x < 0 || y < 0 || x > 1 || y > 1;
   cur.style.left = `${x * 100}%`;
@@ -672,6 +785,7 @@ function endCrop(apply) {
     const next = isIdentity(q) ? IDENTITY_QUAD.map((p) => p.slice()) : q.map(([x, y]) => [+x.toFixed(5), +y.toFixed(5)]);
     if (!deepEqual(next, ED.adjust.crop || null)) {
       ED.adjust.crop = next;
+      dropPlacedPicks("crop");
       markDirty();
       requestPreview();
       layoutStage();
@@ -731,6 +845,7 @@ async function saveEdits() {
     await api("/api/adjust", { id: it.id, mode: ED.mode, adjust, edits, edits_action: action });
     ED.dirty = false;
     ED.strokes = [];
+    ED.undo = [];
     ED.editsAction = "keep";
     summaryDismissed = null;
     S.version = null;
@@ -749,7 +864,10 @@ async function saveAndNext() {
 
 function copySettings() {
   const adjust = JSON.parse(JSON.stringify(ED.adjust));
-  delete adjust.crop;  // crops belong to one image
+  delete adjust.crop;  // crops and "touching only" fills belong to one image
+  adjust.picks = withoutPlacedPicks(adjust.picks);
+  if (!adjust.picks) delete adjust.picks;
+  else adjust.picks.forEach((p) => delete p._at);
   const clip = { mode: ED.mode, adjust };
   lsSet("bgs-clipboard", JSON.stringify(clip));
   toast(`Copied: ${describeSettings(clip)}`);
@@ -760,10 +878,12 @@ function pasteSettings() {
   const clip = readClipboard();
   if (!clip) return;
   const crop = ED.adjust.crop;
+  const placed = (ED.adjust.picks || []).filter((p) => p.at);
   const sameGeometry = (ED.adjust.rot90 || 0) === (clip.adjust.rot90 || 0) && (ED.adjust.angle || 0) === (clip.adjust.angle || 0);
   ED.mode = clip.mode;
   ED.adjust = JSON.parse(JSON.stringify(clip.adjust));
   if (crop) ED.adjust.crop = crop;
+  if (placed.length) ED.adjust.picks = [...placed, ...(ED.adjust.picks || [])];
   if (!sameGeometry) geometryChanged();
   markDirty();
   requestPreview();
@@ -780,6 +900,7 @@ async function resetToAutomatic() {
     ED.mode = S.settings.mode;
     ED.adjust = {};
     ED.strokes = [];
+    ED.undo = [];
     ED.baseKeep = ED.baseErase = null;
     ED.editsAction = "keep";
     S.version = null;
@@ -818,7 +939,7 @@ function wireEditor() {
     if (k === "r" && !ED.crop) { (e.shiftKey ? $("#rotLeft") : $("#rotRight")).click(); return; }
     if (e.key === "ArrowLeft") { e.preventDefault(); stepInspector(-1); }
     else if (e.key === "ArrowRight") { e.preventDefault(); stepInspector(1); }
-    else if (k === "k" || k === "e" || k === "v") { if (!ED.crop) chooseTool({ k: "keep", e: "erase", v: "view" }[k]); }
+    else if (k === "k" || k === "e" || k === "v" || k === "f") { if (!ED.crop) chooseTool({ k: "keep", e: "erase", v: "view", f: "pick" }[k]); }
     else if (e.key === "[" || e.key === "]") {
       ED.brush = Math.max(4, Math.min(200, ED.brush + (e.key === "]" ? 6 : -6)));
       fillInspector();
@@ -1002,7 +1123,17 @@ function wireEditor() {
   window.chooseTool = chooseTool;
   $$("#toolSeg button").forEach((b) => b.addEventListener("click", () => chooseTool(b.dataset.tool)));
   $("#brushSize").addEventListener("input", (e) => { ED.brush = Number(e.target.value); $("#brushVal").textContent = `${ED.brush}px`; });
+  $$("#pickAct button").forEach((b) => b.addEventListener("click", () => setPickOption("act", b.dataset.v)));
+  $$("#pickWhere button").forEach((b) => b.addEventListener("click", () => setPickOption("near", b.dataset.v === "near")));
+  $$("#pickTone button").forEach((b) => b.addEventListener("click", () => setPickOption("tone", b.dataset.v)));
+  $("#pickTol").addEventListener("input", (e) => setPickOption("tol", Number(e.target.value)));
   $("#brushUndo").addEventListener("click", () => {
+    // Undo the newest stroke or colour fill (skipping any already removed another way).
+    while (ED.undo.length) {
+      const u = ED.undo.pop();
+      if (u.pick && (ED.adjust.picks || []).includes(u.pick)) { removePick(u.pick); return; }
+      if (u.stroke && ED.strokes.includes(u.stroke)) break;
+    }
     if (!ED.strokes.length) return;
     ED.strokes.pop();
     redrawLayers();
@@ -1011,7 +1142,9 @@ function wireEditor() {
     fillInspector();
   });
   $("#brushClear").addEventListener("click", () => {
+    if (ED.adjust.picks) { delete ED.adjust.picks; requestPreview(); }
     ED.strokes = [];
+    ED.undo = [];
     ED.baseKeep = ED.baseErase = null;
     ED.editsAction = "clear";
     redrawLayers();
@@ -1038,6 +1171,7 @@ function wireEditor() {
       requestPreview();
       return;
     }
+    if (ED.tool === "pick") { if (ED.live) addPick(e); return; }
     stage.setPointerCapture(e.pointerId);
     if (ED.tool !== "view" && ED.live) {
       mode = "brush";
@@ -1045,6 +1179,7 @@ function wireEditor() {
       // Brush size is in preview pixels, so strokes stay put when zooming.
       ED.stroke = { tool: ED.tool, size: ED.brush, points: [[x * ED.live.w, y * ED.live.h]] };
       ED.strokes.push(ED.stroke);
+      ED.undo.push({ stroke: ED.stroke });
       paintStroke(ED.stroke, 0);
       renderLive();
     } else {

@@ -543,6 +543,61 @@ const LiteEngine = (() => {
     return out;
   }
 
+  // Colour fills (pick_masks + apply_picks): keep or remove every pixel close to a picked
+  // colour, everywhere or only the patch touching the clicked point; kept pixels may be recoloured.
+  const FILL_TONES = { black: 0, grey: 128 };
+  function pickMask(frame, p, labF) {
+    const { w, h } = frame, n = w * h, m = new Uint8Array(n), t = new Float32Array(3);
+    const hex = parseInt(p.c.slice(1), 16);
+    lab(hex >> 16 & 255, hex >> 8 & 255, hex & 255, t, 0);
+    for (let i = 0; i < n; i++) {
+      const d = Math.hypot(labF[i * 3] - t[0], labF[i * 3 + 1] - t[1], labF[i * 3 + 2] - t[2]);
+      m[i] = Math.round(clamp((1.5 * p.tol - d) / (0.5 * p.tol), 0, 1) * 255);
+    }
+    if (!p.at) return m;
+    const cx = Math.min(w - 1, Math.floor(p.at[0] * w)), cy = Math.min(h - 1, Math.floor(p.at[1] * h));
+    const r = Math.max(2, Math.round(Math.max(w, h) / 1400 * 2));
+    let seed = -1;
+    for (let y = Math.max(0, cy - r); y <= Math.min(h - 1, cy + r); y++)
+      for (let x = Math.max(0, cx - r); x <= Math.min(w - 1, cx + r); x++)
+        if (m[y * w + x] && (seed < 0 || m[y * w + x] > m[seed])) seed = y * w + x;
+    const out = new Uint8Array(n);
+    if (seed < 0) return out;
+    const stack = [seed];
+    out[seed] = m[seed];
+    while (stack.length) {  // 8-connected, like ndimage.label with a 3x3 structure
+      const i = stack.pop(), x = i % w, y = (i - x) / w;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy, j = yy * w + xx;
+        if (xx >= 0 && xx < w && yy >= 0 && yy < h && m[j] && !out[j]) { out[j] = m[j]; stack.push(j); }
+      }
+    }
+    return out;
+  }
+
+  function applyPicks(cut, frame, picks) {
+    if (!picks || !picks.length) return cut;
+    const n = frame.w * frame.h, labF = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) lab(frame.d[i * 4], frame.d[i * 4 + 1], frame.d[i * 4 + 2], labF, i * 3);
+    const out = newImg(cut.w, cut.h, true);
+    out.d.set(cut.d);
+    if (!cut.alpha) for (let i = 0; i < n; i++) out.d[i * 4 + 3] = 255;
+    const c = Float32Array.from(out.d);
+    for (const p of picks) {
+      const mk = pickMask(frame, p, labF), tone = FILL_TONES[p.tone];
+      for (let i = 0; i < n; i++) {
+        if (!mk[i]) continue;
+        const q = i * 4, m = (mk[i] / 255) * (frame.alpha ? frame.d[q + 3] / 255 : 1), a = c[q + 3] / 255;
+        if (p.act === "erase") { c[q + 3] = a * (1 - m) * 255; continue; }
+        const oa = m + a * (1 - m);
+        for (let k = 0; k < 3; k++) c[q + k] = ((tone ?? frame.d[q + k]) * m + c[q + k] * a * (1 - m)) / Math.max(oa, 1e-6);
+        c[q + 3] = oa * 255;
+      }
+    }
+    out.d.set(c);
+    return out;
+  }
+
   function composite(cut, rgb) {
     const out = newImg(cut.w, cut.h, false);
     for (let i = 0; i < cut.w * cut.h; i++) {
@@ -583,7 +638,10 @@ const LiteEngine = (() => {
       used = "card"; why = "cropped by hand";
     }
     const frame = quad ? warpQuad(geo, quad, 4) : geo;
-    const finish = (cut) => ({ cut: applyTone(cut, adjust), frame: applyTone(frame, adjust), orig: frame, used, why, quad });
+    const finish = (cut) => {
+      const toned = applyTone(frame, adjust);
+      return { cut: applyPicks(applyTone(cut, adjust), toned, adjust.picks), frame: toned, orig: frame, used, why, quad };
+    };
 
     if (used === "item" || used === "photo") {
       let mask = rotate(getMask(), rot90, angle, 1);

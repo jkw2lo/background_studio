@@ -154,12 +154,8 @@ def sanitize_adjust(adj: dict | None) -> dict:
         out["rot90"] = rot90
     if adj.get("autotone"):
         out["autotone"] = True
-    paper = adj.get("paper")
-    if paper:
-        if not (isinstance(paper, str) and len(paper) == 7 and paper[0] == "#"):
-            raise ValueError("Paper colour must look like #RRGGBB")
-        int(paper[1:], 16)
-        out["paper"] = paper.lower()
+    if adj.get("paper"):
+        out["paper"] = _hex(adj["paper"], "Paper colour")
     for key in ("fill", "fringe"):
         if adj.get(key) is not None:
             out[key] = bool(adj[key])
@@ -172,7 +168,37 @@ def sanitize_adjust(adj: dict | None) -> dict:
         if len(q) != 4:
             raise ValueError("Crop needs four corners")
         out["crop"] = [[round(min(1.0, max(0.0, x)), 5), round(min(1.0, max(0.0, y)), 5)] for x, y in q]
+    picks = adj.get("picks")
+    if picks:
+        if not isinstance(picks, list) or len(picks) > 60:
+            raise ValueError("Bad colour fills")
+        out["picks"] = [_sanitize_pick(p) for p in picks]
     return out
+
+
+def _hex(v, what: str) -> str:
+    if not (isinstance(v, str) and len(v) == 7 and v[0] == "#"):
+        raise ValueError(f"{what} must look like #RRGGBB")
+    int(v[1:], 16)
+    return v.lower()
+
+
+def _sanitize_pick(p) -> dict:
+    """One colour fill: {c: picked colour, tol: range (ΔE), at: clicked point when only the
+    touching patch is wanted, act: keep/erase, tone: black/grey to recolour what's kept}."""
+    if not isinstance(p, dict):
+        raise ValueError("Bad colour fill")
+    try:
+        q = {"c": _hex(p.get("c"), "Fill colour"), "tol": round(max(2.0, min(80.0, float(p.get("tol", 20)))), 1),
+             "act": "erase" if p.get("act") == "erase" else "keep"}
+        if p.get("at") is not None:
+            x, y = (float(v) for v in p["at"])
+            q["at"] = [round(min(1.0, max(0.0, x)), 5), round(min(1.0, max(0.0, y)), 5)]
+    except (TypeError, ValueError):
+        raise ValueError("Bad colour fill")
+    if q["act"] == "keep" and p.get("tone") in ("black", "grey"):
+        q["tone"] = p["tone"]
+    return q
 
 
 def _lab(rgb_u8: np.ndarray) -> np.ndarray:
@@ -452,6 +478,64 @@ def cutout_ink(img: Image.Image, strength: float = 0.0, paper_hex: str | None = 
     return Image.fromarray(out, "RGBA")
 
 
+# ----- colour fills -----
+
+FILL_TONES = {"black": 0.0, "grey": 128.0}
+
+
+def pick_masks(frame: Image.Image, picks: list[dict]) -> list[np.ndarray]:
+    """For each colour fill, how strongly each pixel of `frame` matches (uint8): full within
+    `tol` of the picked colour, fading out by 1.5 x tol. A fill with `at` keeps only the
+    patch connected to that point."""
+    from scipy import ndimage
+
+    rgb = np.asarray(frame.convert("RGB"))
+    h, w = rgb.shape[:2]
+    targets = [_lab(np.array([[[int(p["c"][i:i + 2], 16) for i in (1, 3, 5)]]], np.uint8)).reshape(3) for p in picks]
+    masks = [np.empty((h, w), np.uint8) for _ in picks]
+    for y in range(0, h, 256):  # in strips, like cutout_ink
+        lab = _lab(rgb[y:y + 256])
+        for p, t, m in zip(picks, targets, masks):
+            d = np.linalg.norm(lab - t, axis=2)
+            m[y:y + 256] = (np.clip((1.5 * p["tol"] - d) / (0.5 * p["tol"]), 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
+    for p, m in zip(picks, masks):
+        if "at" not in p:
+            continue
+        # The click was made on a smaller preview: look for the best match close to it.
+        cx, cy = min(w - 1, int(p["at"][0] * w)), min(h - 1, int(p["at"][1] * h))
+        r = max(2, round(max(w, h) / 1400 * 2))
+        y0, x0 = max(0, cy - r), max(0, cx - r)
+        win = m[y0:cy + r + 1, x0:cx + r + 1]
+        if win.max() == 0:
+            m[:] = 0
+            continue
+        sy, sx = np.unravel_index(int(win.argmax()), win.shape)
+        labels, _ = ndimage.label(m > 0, structure=np.ones((3, 3), bool))
+        m[labels != labels[y0 + sy, x0 + sx]] = 0
+    return masks
+
+
+def apply_picks(cut: Image.Image, frame: Image.Image, picks: list[dict] | None) -> Image.Image:
+    """Colour fills from the editor, in order: keep (from the original, or recoloured as black
+    or grey ink) or remove every pixel matching a picked colour."""
+    if not picks:
+        return cut
+    masks = pick_masks(frame, picks)
+    c = np.asarray(cut.convert("RGBA")).astype(np.float32)
+    f = np.asarray(frame.convert("RGBA")).astype(np.float32)
+    for p, mk in zip(picks, masks):
+        m = (mk.astype(np.float32) / 255.0) * (f[..., 3] / 255.0)  # nothing outside the image
+        a = c[..., 3] / 255.0
+        if p["act"] == "erase":
+            c[..., 3] = a * (1.0 - m) * 255.0
+            continue
+        tone = f[..., :3] if p.get("tone") not in FILL_TONES else FILL_TONES[p["tone"]]
+        out_a = m + a * (1.0 - m)  # the fill laid over what's there
+        c[..., :3] = (tone * m[..., None] + c[..., :3] * (a * (1.0 - m))[..., None]) / np.maximum(out_a, 1e-6)[..., None]
+        c[..., 3] = out_a * 255.0
+    return Image.fromarray(np.clip(c + 0.5, 0, 255).astype(np.uint8), "RGBA")
+
+
 def keep_whole(img: Image.Image) -> Image.Image:
     return img if img.mode == "RGBA" else img.convert("RGBA")
 
@@ -584,8 +668,9 @@ def render(img: Image.Image, mode: str, adjust: dict, get_mask, fringe_default: 
     frame = warp_quad(geo, quad) if quad else geo
 
     def finish(cut: Image.Image) -> dict:
-        return {"cut": apply_tone(cut, adjust), "frame": apply_tone(frame, adjust), "orig": frame,
-                "used": used, "why": why, "quad": quad}
+        toned = apply_tone(frame, adjust)
+        return {"cut": apply_picks(apply_tone(cut, adjust), toned, adjust.get("picks")), "frame": toned,
+                "orig": frame, "used": used, "why": why, "quad": quad}
 
     if used in ("item", "photo"):
         turned_mask = rotate_image(Image.fromarray(get_mask(), "L"), rot90)
