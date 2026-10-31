@@ -60,6 +60,7 @@ function describeSettings(c) {
   if (a.contrast) bits.push(`contrast ${signed(Math.round(a.contrast * 100))}`);
   if (a.sat) bits.push(`saturation ${signed(Math.round(a.sat * 100))}`);
   if (a.autotone) bits.push("auto levels");
+  if (a.invert) bits.push("inverted");
   if (a.picks) bits.push(`${a.picks.length} colour fill${a.picks.length > 1 ? "s" : ""}`);
   return bits.join(", ");
 }
@@ -331,7 +332,8 @@ function fillInspector() {
   $("#toneSat").value = Math.round((a.sat || 0) * 100);
   $("#satVal").textContent = signed(Math.round((a.sat || 0) * 100));
   $("#autoTone").checked = !!a.autotone;
-  $("#toneReset").disabled = !(a.bright || a.contrast || a.sat || a.autotone);
+  $("#invertTone").checked = !!a.invert;
+  $("#toneReset").disabled = !(a.bright || a.contrast || a.sat || a.autotone || a.invert);
   $("#rectLockRow").hidden = !ED.crop;
   $("#rectLock").checked = ED.rectLock;
   $("#gridToggle").classList.toggle("active", ED.grid);
@@ -434,7 +436,8 @@ function setPickOption(key, value) {
 function addPick(e) {
   const { x, y } = stagePoint(e);
   if (x < 0 || y < 0 || x > 1 || y > 1) return;
-  const { w, h, frame } = ED.live;
+  // Fills match colours before tone (as the server does), so read the untoned original.
+  const { w, h } = ED.live, frame = ED.live.orig || ED.live.frame;
   const c = scratchCanvas(w, h).getContext("2d");
   c.globalCompositeOperation = "source-over";
   c.clearRect(0, 0, w, h);
@@ -1080,8 +1083,9 @@ function wireEditor() {
   tone("contrast", "#toneContrast");
   tone("sat", "#toneSat");
   $("#autoTone").addEventListener("change", (e) => setAdj("autotone", true, !e.target.checked));
+  $("#invertTone").addEventListener("change", (e) => setAdj("invert", true, !e.target.checked));
   $("#toneReset").addEventListener("click", () => {
-    for (const k of ["bright", "contrast", "sat", "autotone"]) delete ED.adjust[k];
+    for (const k of ["bright", "contrast", "sat", "autotone", "invert"]) delete ED.adjust[k];
     markDirty();
     schedulePreview(0);
   });
@@ -1161,7 +1165,7 @@ function wireEditor() {
       const { x, y } = stagePoint(e);
       const c = scratchCanvas(ED.live.w, ED.live.h).getContext("2d");
       c.globalCompositeOperation = "source-over";
-      c.drawImage(ED.live.frame, 0, 0, ED.live.w, ED.live.h);
+      c.drawImage(ED.live.orig || ED.live.frame, 0, 0, ED.live.w, ED.live.h);  // ink is found before tone
       const px = c.getImageData(Math.floor(x * ED.live.w), Math.floor(y * ED.live.h), 1, 1).data;
       const hex = "#" + [px[0], px[1], px[2]].map((v) => v.toString(16).padStart(2, "0")).join("");
       ED.picking = false;

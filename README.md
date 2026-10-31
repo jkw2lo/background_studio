@@ -129,7 +129,9 @@ written until you click **Save**, which re-renders that image at full size.
   With *Keep 90° corners* on (the default) the crop stays a true rectangle; turn it off to drag
   each corner freely, which also corrects perspective on a card photographed at an angle.
   *Auto-detect* finds scanner edges, and *No crop* turns automatic trimming off for that image.
-* **Tone**: *Brightness*, *Contrast* and *Saturation*, plus *Auto levels* for dull or faded scans.
+* **Tone**: *Brightness*, *Contrast* and *Saturation*, plus *Auto levels* for dull or faded scans,
+  and *Invert colours* (white becomes black and black becomes white: white ink for dark
+  backgrounds, or a scanned negative made positive; transparency stays as it is).
   Tone is applied to the finished result; the "Before" side always shows the untouched original.
 * **Touch up**: *Keep brush* paints parts of the original back in; *Erase brush* removes anything
   left over. The faint image underneath shows what was removed. *Colour fill* (**F**) saves the

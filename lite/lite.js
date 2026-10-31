@@ -257,7 +257,7 @@ const LITE = (() => {
   function clean(a) {
     const out = {};
     for (const [k, v] of Object.entries(a)) {
-      if (v === null || v === undefined || v === false && k === "autotone") continue;
+      if (v === null || v === undefined || v === false && (k === "autotone" || k === "invert")) continue;
       if (typeof v === "number" && Math.abs(v) < 1e-6) continue;
       out[k] = v;
     }

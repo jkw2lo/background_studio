@@ -152,8 +152,9 @@ def sanitize_adjust(adj: dict | None) -> dict:
         raise ValueError("Bad rotation")
     if rot90:
         out["rot90"] = rot90
-    if adj.get("autotone"):
-        out["autotone"] = True
+    for key in ("autotone", "invert"):
+        if adj.get(key):
+            out[key] = True
     if adj.get("paper"):
         out["paper"] = _hex(adj["paper"], "Paper colour")
     for key in ("fill", "fringe"):
@@ -594,10 +595,11 @@ def estimate_skew(img: Image.Image) -> float:
 
 
 def apply_tone(img: Image.Image, adjust: dict) -> Image.Image:
-    """Brightness / contrast / saturation (and optional auto levels) on colour, never on transparency."""
+    """Brightness / contrast / saturation (and optional auto levels, then invert) on colour,
+    never on transparency."""
     b, c, s = adjust.get("bright", 0.0), adjust.get("contrast", 0.0), adjust.get("sat", 0.0)
-    auto = adjust.get("autotone", False)
-    if not (b or c or s or auto):
+    auto, invert = adjust.get("autotone", False), adjust.get("invert", False)
+    if not (b or c or s or auto or invert):
         return img
     alpha = img.getchannel("A") if img.mode == "RGBA" else None
     rgb = img.convert("RGB")
@@ -610,6 +612,8 @@ def apply_tone(img: Image.Image, adjust: dict) -> Image.Image:
         rgb = ImageEnhance.Contrast(rgb).enhance(1.0 + 0.8 * c)
     if s:
         rgb = ImageEnhance.Color(rgb).enhance(1.0 + s)
+    if invert:  # white becomes black: white ink for dark backgrounds, or a negative made positive
+        rgb = ImageOps.invert(rgb)
     if alpha is not None:
         rgb.putalpha(alpha)
     return rgb
@@ -668,9 +672,9 @@ def render(img: Image.Image, mode: str, adjust: dict, get_mask, fringe_default: 
     frame = warp_quad(geo, quad) if quad else geo
 
     def finish(cut: Image.Image) -> dict:
-        toned = apply_tone(frame, adjust)
-        return {"cut": apply_picks(apply_tone(cut, adjust), toned, adjust.get("picks")), "frame": toned,
-                "orig": frame, "used": used, "why": why, "quad": quad}
+        # Colour fills go before tone, so a black fill stays the same as the ink when inverted.
+        return {"cut": apply_tone(apply_picks(cut, frame, adjust.get("picks")), adjust),
+                "frame": apply_tone(frame, adjust), "orig": frame, "used": used, "why": why, "quad": quad}
 
     if used in ("item", "photo"):
         turned_mask = rotate_image(Image.fromarray(get_mask(), "L"), rot90)

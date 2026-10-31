@@ -455,10 +455,11 @@ const LiteEngine = (() => {
   }
 
   // ---------- tone ----------
-  // Brightness / contrast / saturation (and auto levels), as PIL's ImageEnhance + autocontrast.
+  // Brightness / contrast / saturation (and auto levels, then invert), as PIL's ImageEnhance,
+  // autocontrast and invert.
   function applyTone(img, a) {
-    const b = a.bright || 0, c = a.contrast || 0, s = a.sat || 0, auto = !!a.autotone;
-    if (!(b || c || s || auto)) return img;
+    const b = a.bright || 0, c = a.contrast || 0, s = a.sat || 0, auto = !!a.autotone, inv = !!a.invert;
+    if (!(b || c || s || auto || inv)) return img;
     const out = { w: img.w, h: img.h, d: new Uint8ClampedArray(img.d), alpha: img.alpha };
     const d = out.d, n = img.w * img.h;
     const luma = (p) => (d[p] * 299 + d[p + 1] * 587 + d[p + 2] * 114) / 1000;
@@ -498,6 +499,7 @@ const LiteEngine = (() => {
         for (let k = 0; k < 3; k++) d[p + k] = L + f * (d[p + k] - L);
       }
     }
+    if (inv) for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) d[i * 4 + k] = 255 - d[i * 4 + k];
     return out;
   }
 
@@ -638,10 +640,9 @@ const LiteEngine = (() => {
       used = "card"; why = "cropped by hand";
     }
     const frame = quad ? warpQuad(geo, quad, 4) : geo;
-    const finish = (cut) => {
-      const toned = applyTone(frame, adjust);
-      return { cut: applyPicks(applyTone(cut, adjust), toned, adjust.picks), frame: toned, orig: frame, used, why, quad };
-    };
+    const finish = (cut) => ({  // colour fills before tone, as engine.render()
+      cut: applyTone(applyPicks(cut, frame, adjust.picks), adjust), frame: applyTone(frame, adjust), orig: frame, used, why, quad,
+    });
 
     if (used === "item" || used === "photo") {
       let mask = rotate(getMask(), rot90, angle, 1);
