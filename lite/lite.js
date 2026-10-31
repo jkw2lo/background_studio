@@ -494,7 +494,8 @@ const LITE = (() => {
     get.target = "_blank";
     get.rel = "noopener";
     get.textContent = "Get the full app";
-    quit.replaceWith(get);
+    quit.hidden = true;  // app.js still wires it up, so it stays in the page
+    quit.after(get);
 
     $("#addFolder").textContent = "Choose sample pictures…";
     $("#addFiles").hidden = true;
