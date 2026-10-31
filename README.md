@@ -438,3 +438,9 @@ fixed canvas.
 
 Built on rembg (MIT), ONNX Runtime (MIT), Pillow (MIT-CMU), Flask (BSD-3), pillow-heif (BSD-3).
 Models: IS-Net / DIS (Apache-2.0), BiRefNet (MIT), U²-Net (Apache-2.0), CLIP for auto-suggest (MIT).
+
+## Licence
+
+[MIT](LICENSE) © 2026 Jennifer Lo. The third-party libraries and models above keep their own
+licences. The lite demo's sample photos are scikit-image sample data (CC0 and public domain); its
+sample scans are drawn in code by `lite/tools/make_scans.py`.
