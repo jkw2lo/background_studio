@@ -476,7 +476,7 @@ const LITE = (() => {
     $(".brand span").insertAdjacentHTML("afterend", '<span class="lite-pill lite-pill-brand">Lite demo</span>');
     $(".topbar").insertAdjacentHTML("afterend", `
       <div class="lite-banner" role="note">
-        <span><b>This is the lite demo.</b> It runs in your browser on 7 sample pictures.<span class="lite-more"> Their AI
+        <span><b>This is the lite demo, so you can try the app before installing anything.</b> It runs in your browser on 7 sample pictures.<span class="lite-more"> Their AI
         outlines were made in advance by the real models; everything else (methods, edges, ink, crop, tone and
         touch-ups) runs live.</span> The full app removes backgrounds from your own pictures, offline on your Mac.</span>
         <a href="${REPO}" target="_blank" rel="noopener">Get the full app →</a>

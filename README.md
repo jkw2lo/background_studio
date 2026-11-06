@@ -1,8 +1,16 @@
 # Background Studio
 
-A free, private app for removing image backgrounds in bulk, running entirely on your Mac.
-Drop in photos or whole folders. It saves transparent PNGs (and, if you like, copies on white, black
-or any colour) to a separate folder. Your originals are never modified.
+A free, private app for working through piles of pictures, running entirely on your Mac. It has three
+separate features, each with its own coloured tab at the top of the window. Hover over a tab to see
+what it does.
+
+* **Remove backgrounds** (indigo): cut the subject out of your pictures, in bulk.
+* **[Sort & tag](#sort--tag)** (teal): put pictures into your own categories with single key presses,
+  then copy them into folders, add Finder tags or export a spreadsheet.
+* **[Compare & merge](#compare--merge)** (plum): find duplicates across folders and combine them into one.
+
+To remove backgrounds, drop in photos or whole folders. It saves transparent PNGs (and, if you like,
+copies on white, black or any colour) to a separate folder. Your originals are never modified.
 
 * Runs 100% locally with open-source models via [rembg](https://github.com/danielgatis/rembg). No
   accounts, no uploads, no analytics.
@@ -12,11 +20,36 @@ or any colour) to a separate folder. Your originals are never modified.
 * Re-running a batch skips images that were already done.
 * Download everything as one ZIP.
 
+**Why there's a lite version:** the full app needs a Mac, a one-time setup and about 850 MB of disk
+space, which is a lot to commit to before you know whether it suits you. The lite demo lets you try it
+first with nothing to install, on any device, and without handing over any of your own pictures.
+
 **Try it in your browser first:** the [lite demo](https://jkw2lo.github.io/background_studio/) runs the
 same interface on 7 sample pictures. Their AI outlines were made in advance by the real models, and
 everything after that (methods, edges, ink, crop, tone and touch-ups) runs live in the page. It never
-reads your own files. How it's built: [lite/](lite/) (`python3 lite/build.py` makes the site;
+reads your own files. It covers background removal; Sort & tag and Compare & merge are marked
+**Full app** there, and clicking them explains what they do. How it's built: [lite/](lite/) (`python3 lite/build.py` makes the site;
 `lite/tools/make_demo.py` remakes the sample outlines).
+
+## What it looks like
+
+These are from the lite demo, so the orange banner and **Full app** labels don't appear in the app itself.
+
+The three features, each with its own tab:
+
+![The three feature tabs: Remove backgrounds, Sort & tag, and Compare & merge](docs/screenshots/1-three-features.png)
+
+Hover over a tab to see what the feature does:
+
+![The description that appears when hovering over the Sort & tag tab](docs/screenshots/2-hover-description.png)
+
+Background removal results, ready to fine-tune or download:
+
+![A finished batch of seven pictures with their backgrounds removed](docs/screenshots/3-results.png)
+
+The before/after editor:
+
+![The editor with a before/after slider over a sticker, and controls for method and edges](docs/screenshots/4-editor.png)
 
 ---
 
@@ -59,7 +92,7 @@ macOS's standard privacy prompt, so the app can read the images you chose. You c
 
 ## Using it
 
-Both tabs work in steps, shown along the top. **Next** unlocks once a step is done, and you can click
+All three features work in steps, shown just below the feature tabs. **Next** unlocks once a step is done, and you can click
 back to any earlier step at any time.
 
 1. **Add images.** Drop files or folders anywhere on the window, or use **Choose a folder… /
@@ -285,7 +318,7 @@ ignored. The suggestion appears on the picture itself, bottom centre. The pop-up
 category you just picked can be turned off under the category buttons.
 
 **Review** shows everything as a grid, filtered by category. Click a picture to change its tag. When
-you filter by a category, **Remove backgrounds for these** sends those pictures to the other tab.
+you filter by a category, **Remove backgrounds for these** sends those pictures to the Remove backgrounds tab.
 **Untag all…** (in Review) starts over.
 
 **Going through again.** When everything is sorted, **Go through all again** steps through every
