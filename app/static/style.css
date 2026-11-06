@@ -10,6 +10,15 @@
   --accent-hover: #4338ca;
   --accent-ink: #ffffff;
   --accent-soft: #eceafe;
+  /* Each feature has its own colour: on its tab, and as the accent of its pages. */
+  --feat-bg: #4f46e5;
+  --feat-bg-soft: #eceafe;
+  --feat-sort: #0f766e;
+  --feat-sort-hover: #0d5f59;
+  --feat-sort-soft: #d8f3ee;
+  --feat-merge: #a21caf;
+  --feat-merge-hover: #86198f;
+  --feat-merge-soft: #f9e6fb;
   --ok: #15803d;
   --ok-soft: #e3f4e8;
   --warn: #b45309;
@@ -38,6 +47,14 @@
     --accent-hover: #a29dff;
     --accent-ink: #121218;
     --accent-soft: #2a2850;
+    --feat-bg: #8b85ff;
+    --feat-bg-soft: #2a2850;
+    --feat-sort: #2dd4bf;
+    --feat-sort-hover: #5eead4;
+    --feat-sort-soft: #11332f;
+    --feat-merge: #e88bf5;
+    --feat-merge-hover: #f0abfc;
+    --feat-merge-soft: #3b1a40;
     --ok: #4ade80;
     --ok-soft: #173322;
     --warn: #fbbf24;
@@ -111,8 +128,8 @@ select { width: 100%; appearance: auto; }
 
 /* ---------- top bar ---------- */
 .topbar {
-  height: 56px; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--surface);
+  min-height: 62px; display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 20px; border-bottom: 1px solid var(--border); background: var(--surface);
   position: sticky; top: 0; z-index: 20;
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; letter-spacing: -.01em; }
@@ -438,16 +455,60 @@ button.linkish { border: none; background: none; padding: 0 4px; font-size: 11px
   .edit-panel { border-left: none; border-top: 1px solid var(--border); max-height: 45vh; }
 }
 
-/* ---------- section tabs (both pages) ---------- */
-.tabs { display: flex; gap: 2px; margin-left: 18px; background: var(--surface-2); padding: 3px; border-radius: var(--radius-sm); }
-.tabs a {
-  font-size: 13px; font-weight: 550; color: var(--muted); text-decoration: none;
-  padding: 5px 12px; border-radius: 6px; letter-spacing: 0;
+/* ---------- the three features (all pages) ---------- */
+body.tag-page { --accent: var(--feat-sort); --accent-hover: var(--feat-sort-hover); --accent-soft: var(--feat-sort-soft); }
+body.compare-page { --accent: var(--feat-merge); --accent-hover: var(--feat-merge-hover); --accent-soft: var(--feat-merge-soft); }
+
+.features { flex: 1; min-width: 0; max-width: 900px; margin: 0 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.feature { position: relative; min-width: 0; }
+.feature-bg { --f: var(--feat-bg); --f-soft: var(--feat-bg-soft); }
+.feature-sort { --f: var(--feat-sort); --f-soft: var(--feat-sort-soft); }
+.feature-merge { --f: var(--feat-merge); --f-soft: var(--feat-merge-soft); }
+.feature-link {
+  display: flex; align-items: center; gap: 10px; height: 100%; padding: 6px 12px 6px 7px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+  color: var(--text); text-decoration: none;
 }
-.tabs a:hover { color: var(--text); }
-.tabs a.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); font-weight: 650; }
-.tabs a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-@media (max-width: 640px) { .brand > span { display: none; } .tabs { margin-left: 4px; } }
+.feature-link:hover { border-color: var(--f); background: var(--f-soft); }
+.feature-link.active { border-color: var(--f); background: var(--f-soft); box-shadow: inset 0 0 0 1px var(--f); }
+.feature-link:focus-visible { outline: 2px solid var(--f); outline-offset: 2px; }
+.feature-icon { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; background: var(--f-soft); color: var(--f); }
+.feature-link:hover .feature-icon { background: var(--surface); }
+.feature-link.active .feature-icon { background: var(--f); color: var(--accent-ink); }
+.feature-text { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.feature-text b { font-size: 13.5px; font-weight: 650; }
+.feature-text small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.feature-tip {
+  position: absolute; top: calc(100% + 8px); left: 0; width: 330px; z-index: 30; pointer-events: none;
+  background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--f); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); padding: 12px 14px; font-size: 13px; line-height: 1.45;
+  opacity: 0; visibility: hidden; transition: opacity .12s, visibility .12s;
+}
+.feature-merge .feature-tip { left: auto; right: 0; }
+.feature-link:hover + .feature-tip, .feature-link:focus-visible + .feature-tip { opacity: 1; visibility: visible; transition-delay: .15s; }
+.feature-tip p { margin: 6px 0 0; }
+.feature-tip-more { color: var(--muted); }
+.feature-tip-more b { color: var(--text); font-weight: 600; }
+@media (hover: none) { .feature-tip { display: none; } }
+
+/* Too narrow to share a line with the name and the buttons: the features get their own row. */
+@media (max-width: 1240px) {
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 8px 20px; }
+  .features { order: 3; flex: 1 0 100%; max-width: none; margin: 0; }
+}
+@media (max-width: 720px) {
+  /* Each tooltip spans the row, since a tab is narrower than its tooltip. */
+  .features { position: relative; }
+  .feature { position: static; }
+  .feature .feature-tip { left: 0; right: 0; width: auto; }
+}
+@media (max-width: 640px) {
+  .brand > span { display: none; }
+  .features { gap: 6px; }
+  .feature-link { flex-direction: column; gap: 4px; padding: 7px 4px; text-align: center; }
+  .feature-text small { display: none; }
+}
 
 /* ---------- sort & tag ---------- */
 .sorter-main { display: flex; flex-direction: column; gap: 14px; }

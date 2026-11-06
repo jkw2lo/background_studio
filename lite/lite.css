@@ -23,6 +23,8 @@
 }
 .big-actions + .lite-note { max-width: 520px; margin: 14px auto 0; text-align: center; }
 #editPanel .lite-note { margin: 0 0 10px; }
+.feature-text .lite-pill { margin-left: 4px; font-size: 9.5px; padding: 1px 6px; }
+.feature-tip .lite-note { margin-top: 8px; }
 
 a.lite-get { white-space: nowrap; }
 
@@ -46,12 +48,16 @@ a.lite-get { white-space: nowrap; }
 .lite-thumbs img { height: 56px; width: auto; border-radius: 6px; border: 1px solid var(--border); }
 .lite-actions { justify-content: flex-end; margin-top: 18px; align-items: center; }
 
+/* The demo's top bar has more in it (the Lite pill, Get the full app), so the features move to their own row sooner. */
+@media (max-width: 1440px) {
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 8px 20px; }
+  .features { order: 3; flex: 1 0 100%; max-width: none; margin: 0; }
+}
+
 /* The Mac app is laid out for a desktop window; the demo is also opened on phones. */
 @media (max-width: 760px) {
-  .topbar { height: auto; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
+  .topbar { padding: 8px 16px; }
   .brand { min-width: 0; flex-wrap: wrap; gap: 8px; }
-  .tabs { margin-left: 0; max-width: 100%; overflow-x: auto; }
-  .tabs a { white-space: nowrap; }
   .topbar-right { margin-left: auto; }
   .privacy, .topbar-right .lite-get, .lite-more { display: none; }
   .lite-banner { padding: 8px 16px; gap: 4px 12px; }
@@ -65,5 +71,4 @@ a.lite-get { white-space: nowrap; }
   /* style.css hides the app name here; keep it (and the Lite pill) on its own line instead. */
   .brand > span { display: inline; }
   .brand > .lite-pill-brand { display: inline-block; }
-  .tabs { flex-basis: 100%; order: 3; }
 }

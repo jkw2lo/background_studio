@@ -507,14 +507,19 @@ const LITE = (() => {
     note($("#modelHint").parentElement, "Both models' outlines for the sample pictures were made in advance; batch timings are simulated.");
     note($("#editPanel section"), "The AI outline was made in advance. Every control here runs live in your browser.", "afterbegin");
 
-    const tools = {
-      tag: ["Sort & tag", "Sort a pile of pictures into categories with keyboard shortcuts, with on-device AI suggestions, then copy them into folders or export a CSV."],
-      compare: ["Compare & merge", "Compare two or more folders, find duplicates and near-duplicates, and merge them into one tidy folder."],
-    };
-    document.querySelectorAll('a[href="#tag"], a[href="#compare"]').forEach((a) => a.addEventListener("click", (e) => {
-      e.preventDefault();
-      aboutTool(...tools[a.getAttribute("href").slice(1)]);
-    }));
+    // The tabs' own tooltips say what each feature does; here they also say which ones this demo has.
+    note($(".feature-bg .feature-tip"), "Try it here on 7 sample pictures.");
+    for (const href of ["#tag", "#compare"]) {
+      const tip = $(`.feature-link[href="${href}"] + .feature-tip`);
+      const name = tip.querySelector("strong").textContent;
+      const text = tip.querySelector("p").textContent;
+      note(tip, "Part of the full app. Click to read more.");
+      $(`.feature-link[href="${href}"] b`).insertAdjacentHTML("beforeend", '<span class="lite-pill">Full app</span>');
+      document.querySelectorAll(`a[href="${href}"]`).forEach((a) => a.addEventListener("click", (e) => {
+        e.preventDefault();
+        aboutTool(name, text);
+      }));
+    }
     // Registered before app.js's own handlers, so these replace them.
     for (const q of ["#zipBtn", "#sumZip"]) {
       $(q).addEventListener("click", (e) => { e.stopImmediatePropagation(); downloadZip(); });

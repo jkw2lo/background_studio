@@ -13,12 +13,42 @@
     <div class="brand">
       <img src="/static/icon.svg" alt="" width="26" height="26">
       <span>Background Studio</span>
-      <nav class="tabs" aria-label="Sections">
-        <a href="/">Remove backgrounds</a>
-        <a href="/tag" class="active" aria-current="page">Sort &amp; tag</a>
-        <a href="/compare">Compare &amp; merge</a>
-      </nav>
     </div>
+    <nav class="features" aria-label="Features">
+      <div class="feature feature-bg">
+        <a href="/" class="feature-link" aria-describedby="tip-bg">
+          <span class="feature-icon"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg></span>
+          <span class="feature-text"><b>Remove backgrounds</b><small>Cut out the subject of each picture</small></span>
+        </a>
+        <div class="feature-tip" id="tip-bg" role="tooltip">
+          <strong>Remove backgrounds</strong>
+          <p>Cuts the subject out of your pictures and saves them as new files, on a transparent background or a colour of your choice. Works on whole folders, and you can fine-tune any picture by hand.</p>
+          <p class="feature-tip-more"><b>Good for:</b> product photos, portraits, scanned stickers and stamps. Your originals are never changed.</p>
+        </div>
+      </div>
+      <div class="feature feature-sort">
+        <a href="/tag" class="feature-link active" aria-current="page" aria-describedby="tip-sort">
+          <span class="feature-icon"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29a2.41 2.41 0 0 0 3.42 0l6.58-6.58a2.41 2.41 0 0 0 0-3.42Z"/><path d="M7 7h.01"/></svg></span>
+          <span class="feature-text"><b>Sort &amp; tag</b><small>Put pictures into categories</small></span>
+        </a>
+        <div class="feature-tip" id="tip-sort" role="tooltip">
+          <strong>Sort &amp; tag</strong>
+          <p>Go through a pile of pictures and give each one a category with a single key press, helped by AI suggestions that run on your Mac. Then copy them into a folder per category, add Finder tags or export a spreadsheet.</p>
+          <p class="feature-tip-more"><b>Good for:</b> trip photos, collections, anything that needs organising. Your pictures stay where they are.</p>
+        </div>
+      </div>
+      <div class="feature feature-merge">
+        <a href="/compare" class="feature-link" aria-describedby="tip-merge">
+          <span class="feature-icon"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="6.5"/><circle cx="15" cy="12" r="6.5"/></svg></span>
+          <span class="feature-text"><b>Compare &amp; merge</b><small>Find duplicates, combine folders</small></span>
+        </a>
+        <div class="feature-tip" id="tip-merge" role="tooltip">
+          <strong>Compare &amp; merge</strong>
+          <p>Shows what's the same and what's different across two or more folders, including exact duplicates, re-saved copies and edited versions. Then merges them into one folder with one of everything.</p>
+          <p class="feature-tip-more"><b>Good for:</b> a folder and its backup, or copies scattered across folders. Nothing changes until you choose to merge.</p>
+        </div>
+      </div>
+    </nav>
     <div class="topbar-right">
       <span class="privacy"><span class="dot"></span><span>Offline &middot; on this Mac only</span></span>
       <button class="ghost small" id="quitBtn" type="button">Quit</button>
