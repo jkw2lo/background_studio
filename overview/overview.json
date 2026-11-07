@@ -1,0 +1,83 @@
+{
+  "version": 2,
+  "name": "Background Studio",
+  "tagline": "Bulk background removal, offline",
+  "pitch": "Cut the backgrounds out of hundreds of pictures, sort them and merge duplicates, all offline on your Mac.",
+  "accent": "#4f46e5",
+  "status": "Live",
+  "problem": "Background removers want your pictures uploaded, a few at a time.",
+  "stats": [
+    {
+      "value": "3",
+      "label": "tools: remove, sort and merge"
+    },
+    {
+      "value": "4",
+      "label": "open-source AI models to choose from"
+    },
+    {
+      "value": "0",
+      "label": "accounts, uploads or analytics"
+    }
+  ],
+  "features": [
+    {
+      "title": "Cut-outs in bulk",
+      "text": "Drop in whole folders and get transparent PNGs, with your originals untouched.",
+      "details": [
+        "Cancel, resume and retry across hundreds of pictures",
+        "Re-running a batch skips what's already done",
+        "Also saves copies on white, black or any colour"
+      ]
+    },
+    {
+      "title": "Fine-tune any cut-out",
+      "text": "A before and after slider, with the controls to fix what the model missed.",
+      "details": [
+        "Keep and erase brushes, zoom and edge sliders",
+        "Crop and straighten without redoing the batch"
+      ],
+      "screen": {
+        "src": "editor.png",
+        "alt": "The before and after editor over a sample picture"
+      }
+    },
+    {
+      "title": "Sort & tag",
+      "text": "File pictures into your own categories with single key presses.",
+      "details": [
+        "Up to three rounds, such as place, content and stars",
+        "Copy into folders, add Finder tags or export a spreadsheet"
+      ],
+      "screen": {
+        "src": "sort.png",
+        "alt": "Sorting a sample ticket into categories, with a key for each"
+      }
+    },
+    {
+      "title": "Compare & merge",
+      "text": "See what's the same and what's different across folders, then combine them.",
+      "details": [
+        "A Venn diagram of which folders hold each file",
+        "Spots exact copies, re-saved files and edited versions",
+        "Merging never overwrites a file"
+      ],
+      "screen": {
+        "src": "compare.png",
+        "alt": "A Venn diagram comparing two folders of sample pictures"
+      }
+    }
+  ],
+  "screens": [
+    {
+      "src": "desktop.png",
+      "alt": "Background Studio's three tools above a batch of sample cut-outs"
+    }
+  ],
+  "facts": {
+    "worksOn": "A Mac, or a browser demo",
+    "data": "Stays on your Mac",
+    "builtWith": "Python, rembg and ONNX",
+    "started": "Oct 2026"
+  }
+}

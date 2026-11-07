@@ -4,7 +4,7 @@ name: Lite demo
 on:
   push:
     branches: [main]
-    paths: ["app/static/**", "lite/**", ".github/workflows/lite-demo.yml"]
+    paths: ["app/static/**", "lite/**", "overview/**", ".github/workflows/lite-demo.yml"]
   workflow_dispatch:
 
 permissions:

@@ -1,0 +1,18 @@
+{
+  "note": "Taken from the full app on lite/demo-src samples, with BGSTUDIO_DATA pointing at a throwaway folder so no real pictures appear. Run it, load the samples, then node tools/shoot.mjs from jens_launchpad.",
+  "url": "http://127.0.0.1:8770/",
+  "shots": [
+    {
+      "file": "desktop.png"
+    },
+    {
+      "file": "editor.png"
+    },
+    {
+      "file": "sort.png"
+    },
+    {
+      "file": "compare.png"
+    }
+  ]
+}

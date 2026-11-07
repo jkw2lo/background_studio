@@ -65,6 +65,7 @@ def main() -> None:
     for name in ("lite.js", "lite-engine.js", "lite.css"):
         shutil.copy(LITE / name, out / "static" / name)
     shutil.copytree(LITE / "demo", out / "demo")
+    shutil.copytree(LITE.parent / "overview", out / "overview")  # read by the launchpad's showcase
     (out / ".nojekyll").write_text("")
     print(f"Built the lite demo in {out}")
 
